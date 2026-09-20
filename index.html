@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anora Clean Solutions - Operations & Finance Hub</title>
+  <title>Anora Clean Solutions - Centro de Operaciones y Finanzas</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -64,7 +64,7 @@
     .badge-gray { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid var(--border-color); }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; }
-    .modal-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; width: 100%; max-width: 550px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+    .modal-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; width: 100%; max-width: 580px; padding: 24px; max-height: 90vh; overflow-y: auto; }
     .modal-content h3 { margin-bottom: 16px; font-size: 18px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
@@ -74,6 +74,11 @@
     .checkbox-box { background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; max-height: 120px; overflow-y: auto; }
     .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
     .checkbox-item input[type="checkbox"] { width: auto; margin: 0; }
+
+    .tag-manager { background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-top: 8px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag-chip { display: flex; align-items: center; gap: 6px; background: #334155; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+    .tag-chip span { cursor: pointer; color: var(--danger); font-weight: bold; }
 
     #print-modal .modal-content { max-width: 850px; background: #fff; color: #111; padding: 36px; border-radius: 4px; }
     #printable-sheet { line-height: 1.4; font-size: 13px; }
@@ -95,100 +100,100 @@
   <header>
     <div>
       <h1>Anora <span>Clean Solutions</span></h1>
-      <p style="font-size: 13px; color: var(--text-muted);">Executive Operations & Profit Management</p>
+      <p style="font-size: 13px; color: var(--text-muted);">Panel de Gestión Operativa y Control Financiero</p>
     </div>
     <div class="btn-group">
-      <button onclick="openModal('task')">📅 + Add Task / Event</button>
-      <button onclick="openModal('contract')">+ Add Agreement</button>
-      <button onclick="openModal('invoice')">+ Add Invoice</button>
-      <button onclick="openModal('staff')">+ Add Staff</button>
-      <button class="btn-cyan" onclick="openModal('shift')">+ Log Shift / Job Pay</button>
-      <button onclick="openModal('cost')">+ Log Supply Cost</button>
-      <button class="btn-purple" onclick="openPrintStation()">🖨️ Reports Station</button>
-      <button class="btn-secondary" onclick="exportData()">Export Backup</button>
-      <button class="btn-danger" onclick="clearAllData()">Clear All</button>
+      <button onclick="openModal('task')">📅 + Tarea / Evento</button>
+      <button onclick="openModal('contract')">+ Contrato / Agreement</button>
+      <button onclick="openModal('invoice')">+ Invoice / Factura</button>
+      <button onclick="openModal('staff')">+ Personal</button>
+      <button class="btn-cyan" onclick="openModal('shift')">+ Registrar Turno / Pago</button>
+      <button onclick="openModal('cost')">+ Registrar Gasto Insumos</button>
+      <button class="btn-purple" onclick="openPrintStation()">🖨️ Centro de Reportes</button>
+      <button class="btn-secondary" onclick="exportData()">Copia de Seguridad</button>
+      <button class="btn-danger" onclick="clearAllData()">Restablecer Todo</button>
     </div>
   </header>
 
-  <!-- METRICS -->
+  <!-- TARJETAS DE MÉTRICAS -->
   <div class="metrics-grid">
     <div class="metric-card">
-      <div class="metric-title">Total Invoiced (Gross + HST)</div>
+      <div class="metric-title">Total Facturado (Gross + HST)</div>
       <div class="metric-value" id="m-revenue">$0.00</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Direct Costs (Labor + Supplies)</div>
+      <div class="metric-title">Costos Directos (Mano de Obra + Insumos)</div>
       <div class="metric-value" id="m-costs" style="color: var(--danger);">$0.00</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Pending Staff Payroll</div>
+      <div class="metric-title">Nómina Pendiente por Pagar</div>
       <div class="metric-value" id="m-pending-pay" style="color: var(--warning);">$0.00</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Gross Profit</div>
+      <div class="metric-title">Ganancia Bruta (Gross Profit)</div>
       <div class="metric-value" id="m-profit" style="color: var(--success);">$0.00</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Gross Margin %</div>
+      <div class="metric-title">Margen Bruto %</div>
       <div class="metric-value" id="m-margin">0.0%</div>
     </div>
   </div>
 
-  <!-- CALENDAR & TASK SCHEDULE -->
+  <!-- CALENDARIO DE TAREAS -->
   <div class="panel">
     <div class="panel-header">
-      <h2>📅 Operational Schedule & Upcoming Tasks</h2>
+      <h2>📅 Cronograma Operativo y Próximas Tareas</h2>
     </div>
     <table>
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Title / Task Description</th>
-          <th>Facility / Client</th>
-          <th>Assigned Staff</th>
-          <th>Timeline</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Título / Descripción</th>
+          <th>Instalación / Cliente</th>
+          <th>Personal Asignado</th>
+          <th>Plazo</th>
+          <th>Estado</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="tasks-tbody"></tbody>
     </table>
   </div>
 
-  <!-- URGENT DEADLINES -->
+  <!-- RADAR DE ACCIÓN / VENCIMIENTOS -->
   <div class="panel">
     <div class="panel-header">
-      <h2>⚠️ Action Radar: Upcoming Expirations & Due Dates</h2>
+      <h2>⚠️ Radar de Acción: Vencimientos y Fechas Límite</h2>
     </div>
     <table>
       <thead>
         <tr>
-          <th>Category</th>
-          <th>Reference / Facility</th>
-          <th>Target Milestone</th>
-          <th>Due / Cutoff Date</th>
-          <th>Timeline Status</th>
+          <th>Categoría</th>
+          <th>Referencia / Instalación</th>
+          <th>Hito / Objetivo</th>
+          <th>Fecha Límite</th>
+          <th>Estado del Plazo</th>
         </tr>
       </thead>
       <tbody id="deadlines-tbody"></tbody>
     </table>
   </div>
 
-  <!-- EMPLOYEES & SHIFTS -->
+  <!-- PERSONAL Y TURNOS -->
   <div class="dashboard-grid">
     <div class="panel">
       <div class="panel-header">
-        <h2>Cleaners & Staff Directory</h2>
+        <h2>Directorio de Limpiadores y Personal</h2>
       </div>
       <table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Default Rate</th>
-            <th>Phone</th>
-            <th>Action</th>
+            <th>Nombre</th>
+            <th>Cargo</th>
+            <th>Tarifa Base</th>
+            <th>Teléfono</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody id="staff-tbody"></tbody>
@@ -197,17 +202,17 @@
 
     <div class="panel">
       <div class="panel-header">
-        <h2>Shift Logs & Cleaner Payroll</h2>
+        <h2>Registro de Turnos y Pagos de Nómina</h2>
       </div>
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Cleaner</th>
-            <th>Facility / Job</th>
-            <th>Model & Total Pay</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Fecha</th>
+            <th>Limpiador</th>
+            <th>Instalación / Trabajo</th>
+            <th>Modalidad y Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="shifts-tbody"></tbody>
@@ -215,7 +220,7 @@
     </div>
   </div>
 
-  <!-- CONTRACTS & INVOICES -->
+  <!-- CONTRATOS Y FACTURACIÓN -->
   <div class="dashboard-grid">
     <div class="panel">
       <div class="panel-header">
@@ -226,10 +231,10 @@
           <tr>
             <th>Type</th>
             <th>Client / Facility</th>
-            <th>Assigned Cleaner(s)</th>
+            <th>Crew Assigned</th>
             <th>Agreed Value</th>
-            <th>End / Decision Date</th>
-            <th>Actions</th>
+            <th>Expiry / Term</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="contracts-tbody"></tbody>
@@ -248,7 +253,7 @@
             <th>Amount + HST</th>
             <th>Due Date</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="invoices-tbody"></tbody>
@@ -256,18 +261,18 @@
     </div>
   </div>
 
-  <!-- OTHER DIRECT EXPENSES -->
+  <!-- GASTOS DE INSUMOS -->
   <div class="panel">
     <div class="panel-header">
-      <h2>Equipment & Supply Expenses</h2>
+      <h2>Gastos en Materiales y Químicos</h2>
     </div>
     <table>
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Amount ($ CAD)</th>
-          <th>Action</th>
+          <th>Fecha</th>
+          <th>Descripción</th>
+          <th>Monto ($ CAD)</th>
+          <th>Acción</th>
         </tr>
       </thead>
       <tbody id="costs-tbody"></tbody>
@@ -275,28 +280,28 @@
   </div>
 </div>
 
-<!-- ENTRY MODAL -->
+<!-- VENTANA MODAL DINÁMICA -->
 <div id="entry-modal" class="modal">
   <div class="modal-content">
-    <h3 id="modal-title">New Entry</h3>
+    <h3 id="modal-title">Nuevo Registro</h3>
     <form id="modal-form">
       <div id="dynamic-fields"></div>
       <div class="modal-actions">
-        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-        <button type="submit">Save Entry</button>
+        <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="submit">Guardar Registro</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- PRINT / PDF REPORT MODAL -->
+<!-- VENTANA MODAL PARA REPORTES E IMPRESIÓN -->
 <div id="print-modal" class="modal">
   <div class="modal-content">
     <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e0; padding-bottom: 12px; margin-bottom: 18px;">
-      <h3 style="color: #0f172a; margin: 0;">Document Preview</h3>
+      <h3 style="color: #0f172a; margin: 0;">Vista Previa de Documento</h3>
       <div style="display: flex; gap: 8px;">
-        <button onclick="window.print()" style="background: #10b981;">🖨️ Print / Save to PDF</button>
-        <button class="btn-secondary" onclick="closePrintModal()">Close</button>
+        <button onclick="window.print()" style="background: #10b981;">🖨️ Imprimir / Guardar en PDF</button>
+        <button class="btn-secondary" onclick="closePrintModal()">Cerrar</button>
       </div>
     </div>
     <div id="printable-sheet"></div>
@@ -306,18 +311,29 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbz8WqDlEz0MifEqng-8VY0gMtvK0l_CJOWDgdfk9PA0N1lI6_zPMxPKE7mgn0c3YzND/exec";
 
+  const DEFAULT_TASK_TYPES = [
+    "Inspección de Calidad",
+    "Limpieza Profunda / Trabajo Especial",
+    "Entrega de Químicos e Insumos",
+    "Reunión con Cliente",
+    "Administración / Cumplimiento",
+    "Cuidado de Pisos (Decapado / Encerado)"
+  ];
+
   let store = JSON.parse(localStorage.getItem('anora_os_db')) || {
     contracts: [],
     invoices: [],
     costs: [],
     staff: [],
     shifts: [],
-    tasks: []
+    tasks: [],
+    customTaskTypes: DEFAULT_TASK_TYPES
   };
 
   if (!store.staff) store.staff = [];
   if (!store.shifts) store.shifts = [];
   if (!store.tasks) store.tasks = [];
+  if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
 
   let editingContractId = null;
 
@@ -342,6 +358,7 @@
           if (!store.staff) store.staff = [];
           if (!store.shifts) store.shifts = [];
           if (!store.tasks) store.tasks = [];
+          if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
           localStorage.setItem('anora_os_db', JSON.stringify(store));
           renderApp();
         }
@@ -368,14 +385,14 @@
   }
 
   function clearAllData() {
-    if (confirm("Are you sure you want to permanently clear all records?")) {
-      store = { contracts: [], invoices: [], costs: [], staff: [], shifts: [], tasks: [] };
+    if (confirm("¿Estás seguro de que deseas restablecer todos los registros permanentemente?")) {
+      store = { contracts: [], invoices: [], costs: [], staff: [], shifts: [], tasks: [], customTaskTypes: [...DEFAULT_TASK_TYPES] };
       saveStore();
     }
   }
 
   function deleteItem(coll, id) {
-    if (confirm("Delete this entry?")) {
+    if (confirm("¿Eliminar este registro?")) {
       store[coll] = store[coll].filter(item => item.id !== id);
       saveStore();
     }
@@ -384,7 +401,7 @@
   function toggleTaskStatus(id) {
     const task = store.tasks.find(t => t.id === id);
     if (task) {
-      task.status = task.status === 'Completed' ? 'Pending' : 'Completed';
+      task.status = task.status === 'Completado' ? 'Pendiente' : 'Completado';
       saveStore();
     }
   }
@@ -400,7 +417,7 @@
     const totalRev = store.invoices.reduce((acc, inv) => acc + (inv.subtotal * 1.13), 0);
     const supplyCosts = store.costs.reduce((acc, c) => acc + c.amount, 0);
     const shiftCosts = store.shifts.reduce((acc, s) => acc + calcShiftTotal(s), 0);
-    const pendingPayroll = store.shifts.filter(s => s.status === 'Unpaid').reduce((acc, s) => acc + calcShiftTotal(s), 0);
+    const pendingPayroll = store.shifts.filter(s => s.status === 'Pendiente').reduce((acc, s) => acc + calcShiftTotal(s), 0);
 
     const totalDirectCosts = supplyCosts + shiftCosts;
     const baseRev = store.invoices.reduce((acc, inv) => acc + inv.subtotal, 0);
@@ -413,48 +430,48 @@
     document.getElementById('m-profit').textContent = `$${grossProfit.toLocaleString('en-CA', {minimumFractionDigits: 2})}`;
     document.getElementById('m-margin').textContent = `${margin}%`;
 
-    // Tasks & Calendar Schedule
+    // Tareas
     store.tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
     const tBody = document.getElementById('tasks-tbody');
     tBody.innerHTML = store.tasks.length === 0
-      ? '<tr><td colspan="8" style="color: var(--text-muted); text-align: center; padding: 18px;">No upcoming tasks or calendar events scheduled.</td></tr>'
+      ? '<tr><td colspan="8" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay tareas programadas en el calendario.</td></tr>'
       : store.tasks.map(t => {
         const days = getDaysDiff(t.date);
-        let timelineLabel = `${days}d left`;
+        let timelineLabel = `${days}d restantes`;
         let timelineBadge = 'badge-success';
 
-        if (t.status === 'Completed') {
+        if (t.status === 'Completado') {
           timelineBadge = 'badge-gray';
-          timelineLabel = 'Done';
+          timelineLabel = 'Listo';
         } else if (days < 0) {
           timelineBadge = 'badge-danger';
-          timelineLabel = `OVERDUE (${Math.abs(days)}d)`;
+          timelineLabel = `VENCIDO (${Math.abs(days)}d)`;
         } else if (days === 0) {
           timelineBadge = 'badge-warning';
-          timelineLabel = 'TODAY';
+          timelineLabel = 'HOY';
         } else if (days === 1) {
           timelineBadge = 'badge-warning';
-          timelineLabel = 'Tomorrow';
+          timelineLabel = 'Mañana';
         }
 
         return `
-          <tr style="${t.status === 'Completed' ? 'opacity: 0.6;' : ''}">
+          <tr style="${t.status === 'Completado' ? 'opacity: 0.6;' : ''}">
             <td><strong>${t.date}</strong></td>
             <td><span class="badge badge-purple">${t.type}</span></td>
             <td><strong>${t.title}</strong>${t.notes ? `<br><small style="color: var(--text-muted);">${t.notes}</small>` : ''}</td>
             <td>${t.facility || 'General'}</td>
-            <td>${t.assignedStaff || 'Unassigned'}</td>
+            <td>${t.assignedStaff || 'Sin Asignar'}</td>
             <td><span class="badge ${timelineBadge}">${timelineLabel}</span></td>
-            <td><span class="badge ${t.status === 'Completed' ? 'badge-success' : 'badge-warning'}">${t.status}</span></td>
+            <td><span class="badge ${t.status === 'Completado' ? 'badge-success' : 'badge-warning'}">${t.status}</span></td>
             <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="toggleTaskStatus('${t.id}')">${t.status === 'Completed' ? 'Mark Pending' : 'Complete'}</button>
-              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('tasks', '${t.id}')">Delete</button>
+              <button style="padding:4px 8px; font-size:11px;" onclick="toggleTaskStatus('${t.id}')">${t.status === 'Completado' ? 'Marcar Pendiente' : 'Completar'}</button>
+              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('tasks', '${t.id}')">Eliminar</button>
             </td>
           </tr>
         `;
       }).join('');
 
-    // Action Radar
+    // Radar de Acción
     const deadlines = [];
     store.contracts.forEach(c => {
       const days = getDaysDiff(c.expiry);
@@ -477,12 +494,12 @@
 
     const dBody = document.getElementById('deadlines-tbody');
     dBody.innerHTML = deadlines.length === 0 
-      ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No pending deadlines.</td></tr>' 
+      ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay vencimientos pendientes.</td></tr>' 
       : deadlines.map(d => {
         let badge = 'badge-success';
-        let label = `${d.days} days left`;
-        if (d.days < 0) { badge = 'badge-danger'; label = `OVERDUE (${Math.abs(d.days)}d)`; }
-        else if (d.days <= 30) { badge = 'badge-warning'; label = `ACTION REQ (${d.days}d)`; }
+        let label = `${d.days} días restantes`;
+        if (d.days < 0) { badge = 'badge-danger'; label = `VENCIDO (${Math.abs(d.days)}d)`; }
+        else if (d.days <= 30) { badge = 'badge-warning'; label = `ACCIÓN REQ (${d.days}d)`; }
         return `
           <tr>
             <td><span class="badge badge-purple">${d.cat}</span></td>
@@ -494,28 +511,28 @@
         `;
       }).join('');
 
-    // Staff Directory
+    // Personal
     const stBody = document.getElementById('staff-tbody');
     stBody.innerHTML = store.staff.length === 0
-      ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No employees or contractors added.</td></tr>'
+      ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay personal registrado.</td></tr>'
       : store.staff.map(s => `
         <tr>
           <td><strong>${s.name}</strong></td>
           <td><span class="badge badge-cyan">${s.role}</span></td>
           <td>$${Number(s.rate).toFixed(2)}/hr</td>
           <td>${s.phone || 'N/A'}</td>
-          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('staff', '${s.id}')">Delete</button></td>
+          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('staff', '${s.id}')">Eliminar</button></td>
         </tr>
       `).join('');
 
-    // Shifts
+    // Turnos
     const shBody = document.getElementById('shifts-tbody');
     shBody.innerHTML = store.shifts.length === 0
-      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No shifts logged.</td></tr>'
+      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay turnos registrados.</td></tr>'
       : store.shifts.map(s => {
         const total = calcShiftTotal(s);
         const details = s.payModel === 'flat' 
-          ? `<span class="badge badge-purple">Flat Pay</span> <strong>$${total.toFixed(2)}</strong>`
+          ? `<span class="badge badge-purple">Monto Fijo</span> <strong>$${total.toFixed(2)}</strong>`
           : `${s.hours}h @ $${Number(s.rate).toFixed(2)} = <strong>$${total.toFixed(2)}</strong>`;
 
         return `
@@ -524,19 +541,19 @@
             <td><strong>${s.staffName}</strong></td>
             <td>${s.facility}</td>
             <td>${details}</td>
-            <td><span class="badge ${s.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${s.status}</span></td>
+            <td><span class="badge ${s.status === 'Pagado' ? 'badge-success' : 'badge-warning'}">${s.status}</span></td>
             <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="toggleShiftPaid('${s.id}')">${s.status === 'Paid' ? 'Mark Unpaid' : 'Mark Paid'}</button>
-              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('shifts', '${s.id}')">Delete</button>
+              <button style="padding:4px 8px; font-size:11px;" onclick="toggleShiftPaid('${s.id}')">${s.status === 'Pagado' ? 'Marcar Pendiente' : 'Marcar Pagado'}</button>
+              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('shifts', '${s.id}')">Eliminar</button>
             </td>
           </tr>
         `;
       }).join('');
 
-    // Contracts
+    // Contratos
     const cBody = document.getElementById('contracts-tbody');
     cBody.innerHTML = store.contracts.length === 0
-      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No contracts or proposals registered.</td></tr>'
+      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay contratos registrados.</td></tr>'
       : store.contracts.map(c => {
         const freqLabel = c.valueType === 'Yearly Value' ? '/yr' : (c.valueType === 'Special' ? '(Flat)' : '/mo');
         let assignedBadges = '';
@@ -554,8 +571,8 @@
             <td>$${Number(c.value).toFixed(2)} ${freqLabel}</td>
             <td>${c.expiry}</td>
             <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="editContract('${c.id}')">Edit</button>
-              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('contracts', '${c.id}')">Delete</button>
+              <button style="padding:4px 8px; font-size:11px;" onclick="editContract('${c.id}')">Editar</button>
+              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('contracts', '${c.id}')">Eliminar</button>
             </td>
           </tr>
         `;
@@ -564,7 +581,7 @@
     // Invoices
     const iBody = document.getElementById('invoices-tbody');
     iBody.innerHTML = store.invoices.length === 0
-      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No invoices registered.</td></tr>'
+      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay facturas registradas.</td></tr>'
       : store.invoices.map(i => `
         <tr>
           <td>${i.num}</td>
@@ -574,22 +591,22 @@
           <td><span class="badge ${i.status === 'Paid' ? 'badge-success' : 'badge-danger'}">${i.status}</span></td>
           <td style="display:flex; gap:6px;">
             <button style="padding:4px 8px; font-size:11px;" onclick="printInvoice('${i.id}')">Print / PDF</button>
-            <button style="padding:4px 8px; font-size:11px;" onclick="togglePaid('${i.id}')">${i.status === 'Paid' ? 'Mark Unpaid' : 'Mark Paid'}</button>
-            <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('invoices', '${i.id}')">Delete</button>
+            <button style="padding:4px 8px; font-size:11px;" onclick="togglePaid('${i.id}')">${i.status === 'Paid' ? 'Marcar Unpaid' : 'Marcar Paid'}</button>
+            <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('invoices', '${i.id}')">Eliminar</button>
           </td>
         </tr>
       `).join('');
 
-    // Direct Costs
+    // Gastos Insumos
     const costBody = document.getElementById('costs-tbody');
     costBody.innerHTML = store.costs.length === 0
-      ? '<tr><td colspan="4" style="color: var(--text-muted); text-align: center; padding: 18px;">No supply costs logged.</td></tr>'
+      ? '<tr><td colspan="4" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay gastos registrados.</td></tr>'
       : store.costs.map(c => `
         <tr>
           <td>${c.date}</td>
           <td>${c.desc}</td>
           <td>$${Number(c.amount).toFixed(2)}</td>
-          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('costs', '${c.id}')">Delete</button></td>
+          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('costs', '${c.id}')">Eliminar</button></td>
         </tr>
       `).join('');
   }
@@ -601,7 +618,7 @@
 
   function toggleShiftPaid(id) {
     const shift = store.shifts.find(s => s.id === id);
-    if (shift) { shift.status = shift.status === 'Paid' ? 'Unpaid' : 'Paid'; saveStore(); }
+    if (shift) { shift.status = shift.status === 'Pagado' ? 'Pendiente' : 'Pagado'; saveStore(); }
   }
 
   function editContract(id) {
@@ -631,6 +648,52 @@
     }
   }
 
+  function toggleCustomTypeBox() {
+    const box = document.getElementById('custom-types-box');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function addCustomTaskType() {
+    const input = document.getElementById('new-task-type-input');
+    const val = input.value.trim();
+    if (!val) return;
+    if (!store.customTaskTypes.includes(val)) {
+      store.customTaskTypes.push(val);
+      saveStore();
+      renderCustomTaskTypesUI();
+      refreshTaskTypeSelect(val);
+    }
+    input.value = '';
+  }
+
+  function removeCustomTaskType(typeToRemove) {
+    if (confirm(`¿Eliminar la categoría "${typeToRemove}"?`)) {
+      store.customTaskTypes = store.customTaskTypes.filter(t => t !== typeToRemove);
+      if (store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
+      saveStore();
+      renderCustomTaskTypesUI();
+      refreshTaskTypeSelect();
+    }
+  }
+
+  function renderCustomTaskTypesUI() {
+    const list = document.getElementById('tag-list-container');
+    if (!list) return;
+    list.innerHTML = store.customTaskTypes.map(t => `
+      <div class="tag-chip">
+        <span>${t}</span>
+        <span onclick="removeCustomTaskType('${t}')">✕</span>
+      </div>
+    `).join('');
+  }
+
+  function refreshTaskTypeSelect(selectedVal = null) {
+    const sel = document.getElementById('f-t-type');
+    if (!sel) return;
+    const currentVal = selectedVal || sel.value;
+    sel.innerHTML = store.customTaskTypes.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
+  }
+
   function openModal(mode, existingData = null) {
     const container = document.getElementById('dynamic-fields');
     const title = document.getElementById('modal-title');
@@ -638,32 +701,42 @@
     form.onsubmit = (e) => { e.preventDefault(); handleModalSubmit(mode); };
 
     if (mode === 'task') {
-      title.textContent = 'Schedule Operational Task or Event';
-      let staffOpts = '<option value="Unassigned">-- Unassigned --</option>';
+      title.textContent = 'Programar Tarea u Operación';
+      let staffOpts = '<option value="Sin Asignar">-- Sin Asignar --</option>';
       store.staff.forEach(s => { staffOpts += `<option value="${s.name}">${s.name}</option>`; });
 
-      let facilityOpts = '<option value="General / Office">General / Office</option>';
+      let facilityOpts = '<option value="General / Oficina">General / Oficina</option>';
       store.contracts.forEach(c => { facilityOpts += `<option value="${c.client}">${c.client}</option>`; });
+
+      const taskTypeOptions = store.customTaskTypes.map(t => `<option value="${t}">${t}</option>`).join('');
 
       container.innerHTML = `
         <div class="form-group">
-          <label>Task Type</label>
-          <select id="f-t-type">
-            <option value="Inspection / Walkthrough">Site Quality Inspection</option>
-            <option value="Deep Clean / Special">Deep Cleaning / Periodic Work</option>
-            <option value="Supply Delivery">Chemicals & Restock Delivery</option>
-            <option value="Client Meeting">Client Review Meeting</option>
-            <option value="Administrative">Administrative / Compliance</option>
-          </select>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label style="margin:0;">Tipo de Tarea</label>
+            <button type="button" class="btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="toggleCustomTypeBox()">⚙️ Gestionar Tipos</button>
+          </div>
+          <select id="f-t-type">${taskTypeOptions}</select>
+          
+          <div id="custom-types-box" class="tag-manager" style="display:none;">
+            <label style="font-size:11px; color:var(--text-muted);">Añadir nuevo tipo de tarea:</label>
+            <div style="display:flex; gap:6px; margin-top:4px;">
+              <input id="new-task-type-input" placeholder="Ej. Limpieza Post-Construcción" style="flex:1;">
+              <button type="button" style="padding:6px 10px;" onclick="addCustomTaskType()">+ Añadir</button>
+            </div>
+            <div class="tag-list" id="tag-list-container"></div>
+          </div>
         </div>
-        <div class="form-group"><label>Task Title / Description</label><input required id="f-t-title" placeholder="e.g., Monthly floor buffing or key handoff"></div>
-        <div class="form-group"><label>Facility / Location</label><select id="f-t-facility">${facilityOpts}</select></div>
-        <div class="form-group"><label>Assigned Staff</label><select id="f-t-staff">${staffOpts}</select></div>
-        <div class="form-group"><label>Due Date</label><input type="date" required id="f-t-date" value="${new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Notes / Access Instructions (Optional)</label><input id="f-t-notes" placeholder="e.g. Alarm code, contact person on site"></div>
+
+        <div class="form-group"><label>Título o Descripción</label><input required id="f-t-title" placeholder="Ej. Decapado de piso o entrega de suministros"></div>
+        <div class="form-group"><label>Instalación / Ubicación</label><select id="f-t-facility">${facilityOpts}</select></div>
+        <div class="form-group"><label>Personal Asignado</label><select id="f-t-staff">${staffOpts}</select></div>
+        <div class="form-group"><label>Fecha de Ejecución</label><input type="date" required id="f-t-date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor"></div>
       `;
+      setTimeout(renderCustomTaskTypesUI, 50);
     } else if (mode === 'contract') {
-      title.textContent = existingData ? 'Edit Agreement / Reassign Cleaners' : 'Add Agreement or Proposal';
+      title.textContent = existingData ? 'Editar Contrato / Reasignar Personal' : 'Nuevo Contrato o Propuesta';
       const assignedList = existingData ? (existingData.assignedCleaners || []) : [];
 
       let staffCheckboxes = store.staff.map(s => `
@@ -673,11 +746,11 @@
         </div>
       `).join('');
 
-      if (!staffCheckboxes) staffCheckboxes = '<p style="color: var(--text-muted); font-size:12px;">No staff registered yet.</p>';
+      if (!staffCheckboxes) staffCheckboxes = '<p style="color: var(--text-muted); font-size:12px;">No hay personal registrado.</p>';
 
       container.innerHTML = `
         <div class="form-group">
-          <label>Agreement / Proposal Type</label>
+          <label>Agreement / Contract Type</label>
           <select id="f-type">
             <option value="Contract (1-Yr Auto-Renew)" ${existingData && existingData.type === 'Contract (1-Yr Auto-Renew)' ? 'selected' : ''}>Contract (1-Yr Auto-Renew)</option>
             <option value="Contract (Month-to-Month)" ${existingData && existingData.type === 'Contract (Month-to-Month)' ? 'selected' : ''}>Contract (Month-to-Month)</option>
@@ -689,16 +762,16 @@
         </div>
         <div class="form-group"><label>Client / Facility Name</label><input required id="f-client" value="${existingData ? existingData.client : ''}"></div>
         <div class="form-group">
-          <label>Assigned Cleaners / Crew</label>
+          <label>Limpiadores Asignados al Contrato</label>
           <div class="checkbox-box">${staffCheckboxes}</div>
         </div>
         <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
             <label>Value Type</label>
             <select id="f-val-type">
-              <option value="Monthly Value" ${existingData && existingData.valueType === 'Monthly Value' ? 'selected' : ''}>Monthly Value</option>
-              <option value="Yearly Value" ${existingData && existingData.valueType === 'Yearly Value' ? 'selected' : ''}>Yearly Value</option>
-              <option value="Special" ${existingData && existingData.valueType === 'Special' ? 'selected' : ''}>Special (Flat / One-Time)</option>
+              <option value="Monthly Value" ${existingData && existingData.valueType === 'Monthly Value' ? 'selected' : ''}>Monthly Value (/mo)</option>
+              <option value="Yearly Value" ${existingData && existingData.valueType === 'Yearly Value' ? 'selected' : ''}>Yearly Value (/yr)</option>
+              <option value="Special" ${existingData && existingData.valueType === 'Special' ? 'selected' : ''}>Special (Flat Amount)</option>
             </select>
           </div>
           <div>
@@ -710,19 +783,19 @@
         <div class="form-group"><label>Expiry / Decision Date</label><input type="date" required id="f-end" value="${existingData ? existingData.expiry : ''}"></div>
       `;
     } else if (mode === 'staff') {
-      title.textContent = 'Add Cleaner / Employee';
+      title.textContent = 'Registrar Empleado / Contratista';
       container.innerHTML = `
-        <div class="form-group"><label>Full Name</label><input required id="f-st-name"></div>
-        <div class="form-group"><label>Role / Position</label><select id="f-st-role"><option value="Cleaner">Commercial Cleaner</option><option value="Lead Cleaner">Lead Cleaner / Supervisor</option><option value="Subcontractor">Independent Subcontractor</option></select></div>
-        <div class="form-group"><label>Default Hourly Pay Rate ($ CAD)</label><input type="number" step="0.50" required id="f-st-rate" placeholder="20.00"></div>
-        <div class="form-group"><label>Phone Number</label><input id="f-st-phone" placeholder="(905) 555-0123"></div>
+        <div class="form-group"><label>Nombre Completo</label><input required id="f-st-name"></div>
+        <div class="form-group"><label>Cargo / Rol</label><select id="f-st-role"><option value="Limpiador Comercial">Limpiador Comercial</option><option value="Supervisor de Zona">Supervisor de Zona</option><option value="Subcontratista">Subcontratista Independiente</option></select></div>
+        <div class="form-group"><label>Tarifa Base por Hora ($ CAD)</label><input type="number" step="0.50" required id="f-st-rate" placeholder="20.00"></div>
+        <div class="form-group"><label>Teléfono de Contacto</label><input id="f-st-phone" placeholder="(905) 555-0123"></div>
       `;
     } else if (mode === 'shift') {
-      title.textContent = 'Log Cleaner Work Shift / Job Pay';
-      let staffOpts = store.staff.map(s => `<option value="${s.name}" data-rate="${s.rate}">${s.name} ($${s.rate}/hr default)</option>`).join('');
-      if (!staffOpts) staffOpts = '<option value="">No staff registered</option>';
+      title.textContent = 'Registrar Turno o Pago a Personal';
+      let staffOpts = store.staff.map(s => `<option value="${s.name}" data-rate="${s.rate}">${s.name} (Base $${s.rate}/hr)</option>`).join('');
+      if (!staffOpts) staffOpts = '<option value="">No hay personal registrado</option>';
 
-      let facilityOpts = '<option value="">-- Manual Facility Entry --</option>';
+      let facilityOpts = '<option value="">-- Ingreso Manual de Instalación --</option>';
       store.contracts.forEach(c => {
         const cleanersAttr = (c.assignedCleaners && c.assignedCleaners.length > 0) ? c.assignedCleaners.join(',') : '';
         facilityOpts += `<option value="${c.client}" data-cleaners="${cleanersAttr}">${c.client}</option>`;
@@ -730,55 +803,55 @@
 
       container.innerHTML = `
         <div class="form-group">
-          <label>Facility / Contract / Job Location</label>
+          <label>Instalación / Contrato / Proyecto</label>
           <select id="f-sh-facility-sel" onchange="onShiftFacilityChange()">${facilityOpts}</select>
         </div>
-        <div class="form-group"><label>Or Type Facility Name</label><input id="f-sh-facility" placeholder="Acme Logistics"></div>
-        <div class="form-group"><label>Select Cleaner</label><select id="f-sh-staff" onchange="autoFillRate()">${staffOpts}</select></div>
-        <div class="form-group"><label>Shift Date</label><input type="date" required id="f-sh-date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="form-group"><label>O Escribe el Nombre de la Instalación</label><input id="f-sh-facility" placeholder="Acme Logistics"></div>
+        <div class="form-group"><label>Seleccionar Limpiador</label><select id="f-sh-staff" onchange="autoFillRate()">${staffOpts}</select></div>
+        <div class="form-group"><label>Fecha del Turno / Trabajo</label><input type="date" required id="f-sh-date" value="${new Date().toISOString().split('T')[0]}"></div>
         
         <div class="form-group">
-          <label>Payment Model for this Task</label>
+          <label>Modalidad de Pago para este Registro</label>
           <select id="f-sh-pay-model" onchange="togglePayModelFields()">
-            <option value="hourly">Hourly Pay (Hours × Rate)</option>
-            <option value="flat">Flat Job Payout (Fixed Amount per Job)</option>
+            <option value="hourly">Pago por Horas (Horas × Tarifa)</option>
+            <option value="flat">Pago Fijo por Trabajo (Monto Cerrado)</option>
           </select>
         </div>
 
         <div id="sh-hourly-block" class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
-            <label>Hours Worked</label>
+            <label>Horas Trabajadas</label>
             <input type="number" step="0.25" id="f-sh-hours" placeholder="3.5" value="3.0">
           </div>
           <div>
-            <label>Hourly Rate ($ CAD)</label>
+            <label>Tarifa por Hora ($ CAD)</label>
             <input type="number" step="0.50" id="f-sh-rate" placeholder="20.00">
           </div>
         </div>
 
         <div id="sh-flat-block" class="form-group" style="display: none;">
-          <label>Agreed Fixed Payout ($ CAD)</label>
-          <input type="number" step="1.00" id="f-sh-flat-pay" placeholder="e.g. 180.00">
+          <label>Monto Fijo Acordado ($ CAD)</label>
+          <input type="number" step="1.00" id="f-sh-flat-pay" placeholder="Ej. 180.00">
         </div>
 
-        <div class="form-group"><label>Work Type</label><select id="f-sh-type"><option value="Standard Shift">Standard Contract Shift</option><option value="Deep Clean / Special">Deep Clean / Special Job</option><option value="Post-Construction">Post-Construction / Move-Out</option></select></div>
+        <div class="form-group"><label>Tipo de Servicio</label><select id="f-sh-type"><option value="Turno Regular">Turno Contrato Regular</option><option value="Limpieza Profunda / Especial">Limpieza Profunda / Especial</option><option value="Fin de Obra / Post-Construcción">Fin de Obra / Post-Construcción</option></select></div>
       `;
       setTimeout(autoFillRate, 50);
     } else if (mode === 'invoice') {
-      title.textContent = 'Add Invoice';
+      title.textContent = 'Crear Factura / New Invoice';
       container.innerHTML = `
         <div class="form-group"><label>Invoice Number</label><input required id="f-num" placeholder="ACS-2026-001"></div>
-        <div class="form-group"><label>Client Name</label><input required id="f-client"></div>
-        <div class="form-group"><label>Subtotal ($ CAD)</label><input type="number" step="0.01" required id="f-sub"></div>
-        <div class="form-group"><label>Payment Terms</label><select id="f-terms"><option value="Net 30">Net 30</option><option value="Net 15">Net 15</option><option value="Due on Receipt">Due on Receipt</option></select></div>
-        <div class="form-group"><label>Payment Due Date</label><input type="date" required id="f-due"></div>
+        <div class="form-group"><label>Client Name (Facturar a)</label><input required id="f-client"></div>
+        <div class="form-group"><label>Subtotal (Amount before HST - CAD)</label><input type="number" step="0.01" required id="f-sub" placeholder="1250.00"></div>
+        <div class="form-group"><label>Payment Terms</label><select id="f-terms"><option value="Net 30">Net 30 (30 days)</option><option value="Net 15">Net 15 (15 days)</option><option value="Due on Receipt">Due on Receipt</option></select></div>
+        <div class="form-group"><label>Due Date (Fecha límite)</label><input type="date" required id="f-due"></div>
       `;
     } else if (mode === 'cost') {
-      title.textContent = 'Log Equipment or Supply Expense';
+      title.textContent = 'Registrar Gasto en Insumos o Equipos';
       container.innerHTML = `
-        <div class="form-group"><label>Expense Description</label><input required id="f-desc" placeholder="Mop refills, floor degreaser"></div>
-        <div class="form-group"><label>Cost Amount ($ CAD)</label><input type="number" step="0.01" required id="f-amount"></div>
-        <div class="form-group"><label>Date Incurred</label><input type="date" required id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="form-group"><label>Descripción del Gasto</label><input required id="f-desc" placeholder="Repuestos de mopa, desengrasante, bolsas"></div>
+        <div class="form-group"><label>Monto Pagado ($ CAD)</label><input type="number" step="0.01" required id="f-amount"></div>
+        <div class="form-group"><label>Fecha de Compra</label><input type="date" required id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
       `;
     }
     document.getElementById('entry-modal').style.display = 'flex';
@@ -824,7 +897,7 @@
         assignedStaff: document.getElementById('f-t-staff').value,
         date: document.getElementById('f-t-date').value,
         notes: document.getElementById('f-t-notes').value,
-        status: 'Pending'
+        status: 'Pendiente'
       });
     } else if (mode === 'contract') {
       const checkedCleaners = Array.from(document.querySelectorAll('input[name="cleaner-check"]:checked')).map(cb => cb.value);
@@ -859,7 +932,7 @@
       });
     } else if (mode === 'shift') {
       const staffSel = document.getElementById('f-sh-staff');
-      const staffName = staffSel.value || "Cleaner";
+      const staffName = staffSel.value || "Limpiador";
       const facName = document.getElementById('f-sh-facility').value || document.getElementById('f-sh-facility-sel').value;
       const payModel = document.getElementById('f-sh-pay-model').value;
 
@@ -873,7 +946,7 @@
         rate: payModel === 'hourly' ? Number(document.getElementById('f-sh-rate').value) : 0,
         flatPay: payModel === 'flat' ? Number(document.getElementById('f-sh-flat-pay').value) : 0,
         type: document.getElementById('f-sh-type').value,
-        status: 'Unpaid'
+        status: 'Pendiente'
       });
     } else if (mode === 'invoice') {
       store.invoices.push({
@@ -904,6 +977,7 @@
   
   function closePrintModal() { document.getElementById('print-modal').style.display = 'none'; }
 
+  // FACTURA OFICIAL 100% EN INGLÉS PARA EL CLIENTE
   function printInvoice(invId) {
     const inv = store.invoices.find(i => i.id === invId);
     if (!inv) return;
@@ -913,53 +987,69 @@
     const html = `
       <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px;">
         <div>
-          <h2 style="margin: 0; color: #1e3a8a; font-size: 24px;">INVOICE</h2>
-          <p style="margin: 4px 0 0 0; font-size: 14px;"><strong>Anora Clean Solutions</strong><br>St. Catharines, ON, Canada<br>billing@anoraclean.ca</p>
+          <h2 style="margin: 0; color: #1e3a8a; font-size: 24px; letter-spacing: 1px;">INVOICE</h2>
+          <p style="margin: 6px 0 0 0; font-size: 13px; line-height: 1.4;">
+            <strong>Anora Clean Solutions</strong><br>
+            St. Catharines, ON, Canada<br>
+            Email: billing@anoraclean.ca
+          </p>
         </div>
         <div style="text-align: right;">
-          <p style="margin: 0; font-size: 14px;"><strong>Invoice #:</strong> ${inv.num}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Invoice #:</strong> ${inv.num}</p>
+          <p style="margin: 2px 0; font-size: 13px;"><strong>Issue Date:</strong> ${new Date().toLocaleDateString('en-CA')}</p>
           <p style="margin: 2px 0; font-size: 13px;"><strong>Due Date:</strong> ${inv.due}</p>
-          <p style="margin: 2px 0; font-size: 13px;"><strong>Terms:</strong> ${inv.terms}</p>
-          <p style="margin: 2px 0; font-size: 13px;"><strong>Status:</strong> ${inv.status.toUpperCase()}</p>
+          <p style="margin: 2px 0; font-size: 13px;"><strong>Payment Terms:</strong> ${inv.terms}</p>
+          <p style="margin: 4px 0 0 0; font-size: 13px;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold;">STATUS: ${inv.status.toUpperCase()}</span></p>
         </div>
       </div>
 
       <div style="margin-bottom: 24px;">
-        <p style="margin: 0; font-size: 12px; color: #555; text-transform: uppercase; font-weight: bold;">Billed To:</p>
-        <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: bold;">${inv.client}</p>
+        <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">Billed To:</p>
+        <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0f172a;">${inv.client}</p>
       </div>
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
         <thead>
           <tr style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-            <th style="padding: 10px; text-align: left;">Service Description</th>
-            <th style="padding: 10px; text-align: right;">Rate (CAD)</th>
-            <th style="padding: 10px; text-align: right;">Amount (CAD)</th>
+            <th style="padding: 10px; text-align: left; font-size: 12px; text-transform: uppercase;">Service Description</th>
+            <th style="padding: 10px; text-align: right; font-size: 12px; text-transform: uppercase;">Rate (CAD)</th>
+            <th style="padding: 10px; text-align: right; font-size: 12px; text-transform: uppercase;">Amount (CAD)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">Commercial Janitorial & Scheduled Sanitation Services</td>
-            <td style="padding: 12px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">$${inv.subtotal.toFixed(2)}</td>
-            <td style="padding: 12px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">$${inv.subtotal.toFixed(2)}</td>
+            <td style="padding: 14px 10px; border-bottom: 1px solid #e2e8f0;">
+              <strong>Commercial Janitorial & Scheduled Sanitation Services</strong><br>
+              <span style="color: #64748b; font-size: 12px;">Professional facility cleaning and sanitation services for the agreed period.</span>
+            </td>
+            <td style="padding: 14px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">$${inv.subtotal.toFixed(2)}</td>
+            <td style="padding: 14px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">$${inv.subtotal.toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
 
       <div style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
-        <div style="width: 250px;">
-          <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span>Subtotal:</span><span>$${inv.subtotal.toFixed(2)}</span></div>
-          <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span>Ontario HST (13%):</span><span>$${hst.toFixed(2)}</span></div>
-          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px;">
-            <span>Total Due:</span><span>$${total.toFixed(2)} CAD</span>
+        <div style="width: 280px;">
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
+            <span>Subtotal:</span>
+            <span>$${inv.subtotal.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
+            <span>Ontario HST (13%):</span>
+            <span>$${hst.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px; margin-top: 4px;">
+            <span>Total Due:</span>
+            <span>$${total.toFixed(2)} CAD</span>
           </div>
         </div>
       </div>
 
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 4px; font-size: 12px;">
-        <p style="margin: 0 0 4px 0; font-weight: bold;">Payment Methods:</p>
-        <p style="margin: 0;">• Interac e-Transfer: billing@anoraclean.ca</p>
-        <p style="margin: 0;">• Direct EFT / Bank Transfer: Available upon request</p>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 6px; font-size: 12px; line-height: 1.5;">
+        <p style="margin: 0 0 4px 0; font-weight: bold; color: #0f172a;">Payment Instructions:</p>
+        <p style="margin: 0;">• <strong>Interac e-Transfer:</strong> billing@anoraclean.ca</p>
+        <p style="margin: 0;">• <strong>Direct Deposit / EFT:</strong> Account details available upon request.</p>
+        <p style="margin: 4px 0 0 0; color: #64748b;">Thank you for your business!</p>
       </div>
     `;
 
@@ -970,14 +1060,14 @@
   function openPrintStation() {
     const html = `
       <div class="no-print" style="margin-bottom: 20px;">
-        <h2 style="margin: 0 0 10px 0; color: #0f172a;">Reports & Export Hub</h2>
+        <h2 style="margin: 0 0 10px 0; color: #0f172a;">Centro de Reportes y Documentos</h2>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button onclick="renderPnLReport()" style="background: #2563eb;">📊 Print Financial P&L Statement</button>
-          <button onclick="renderPayrollReport()" style="background: #0891b2;">👷 Print Payroll Sheet (All)</button>
+          <button onclick="renderPnLReport()" style="background: #2563eb;">📊 Estado de Resultados (P&L Interno)</button>
+          <button onclick="renderPayrollReport()" style="background: #0891b2;">👷 Resumen de Nómina de Limpiadores</button>
         </div>
       </div>
       <div id="station-content">
-        <p style="color: #64748b;">Select one of the report options above to preview and print/export to PDF.</p>
+        <p style="color: #64748b;">Selecciona una opción superior para generar la vista previa e imprimir o guardar en PDF.</p>
       </div>
     `;
 
@@ -998,21 +1088,21 @@
     const html = `
       <div style="border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px;">
         <h2 style="margin: 0; color: #1e3a8a;">Anora Clean Solutions</h2>
-        <p style="margin: 4px 0 0 0;"><strong>Executive Profit & Loss Statement</strong> | Generated: ${new Date().toLocaleDateString()}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Estado de Resultados y Rentabilidad Operativa</strong> | Fecha: ${new Date().toLocaleDateString('es-ES')}</p>
       </div>
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <thead>
-          <tr style="background: #f1f5f9;"><th style="padding: 8px; text-align: left;">Category</th><th style="padding: 8px; text-align: right;">Amount (CAD)</th></tr>
+          <tr style="background: #f1f5f9;"><th style="padding: 8px; text-align: left;">Concepto</th><th style="padding: 8px; text-align: right;">Monto (CAD)</th></tr>
         </thead>
         <tbody>
-          <tr><td style="padding: 8px;">Invoiced Commercial Revenue (Net of HST)</td><td style="padding: 8px; text-align: right; font-weight: bold;">$${baseRev.toFixed(2)}</td></tr>
-          <tr><td style="padding: 8px;">Ontario HST Collected (13%)</td><td style="padding: 8px; text-align: right;">$${hstRev.toFixed(2)}</td></tr>
-          <tr style="background: #f8fafc; font-weight: bold;"><td style="padding: 8px;">Total Gross Billings (Including HST)</td><td style="padding: 8px; text-align: right;">$${totalRev.toFixed(2)}</td></tr>
-          <tr><td style="padding: 8px; color: #dc2626;">Direct Labor & Cleaner Wages (Hourly + Flat)</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${shiftCosts.toFixed(2)})</td></tr>
-          <tr><td style="padding: 8px; color: #dc2626;">Supplies, Chemicals & Equipment Wear</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${supplyCosts.toFixed(2)})</td></tr>
-          <tr style="background: #f1f5f9; font-weight: bold;"><td style="padding: 8px;">Total Direct Cost of Service</td><td style="padding: 8px; text-align: right;">$${totalCosts.toFixed(2)}</td></tr>
-          <tr style="border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px; background: #ecfdf5;"><td style="padding: 10px;">Gross Operating Profit</td><td style="padding: 10px; text-align: right; color: #059669;">$${profit.toFixed(2)} (${margin}%)</td></tr>
+          <tr><td style="padding: 8px;">Facturación Comercial Neta (Sin HST)</td><td style="padding: 8px; text-align: right; font-weight: bold;">$${baseRev.toFixed(2)}</td></tr>
+          <tr><td style="padding: 8px;">Ontario HST Recaudado (13%)</td><td style="padding: 8px; text-align: right;">$${hstRev.toFixed(2)}</td></tr>
+          <tr style="background: #f8fafc; font-weight: bold;"><td style="padding: 8px;">Facturación Total Bruta (Con HST)</td><td style="padding: 8px; text-align: right;">$${totalRev.toFixed(2)}</td></tr>
+          <tr><td style="padding: 8px; color: #dc2626;">Costos de Mano de Obra (Horas + Montos Fijos)</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${shiftCosts.toFixed(2)})</td></tr>
+          <tr><td style="padding: 8px; color: #dc2626;">Insumos, Químicos y Desgaste de Maquinaria</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${supplyCosts.toFixed(2)})</td></tr>
+          <tr style="background: #f1f5f9; font-weight: bold;"><td style="padding: 8px;">Costo Directo Total de Operación</td><td style="padding: 8px; text-align: right;">$${totalCosts.toFixed(2)}</td></tr>
+          <tr style="border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px; background: #ecfdf5;"><td style="padding: 10px;">Beneficio Operativo Bruto</td><td style="padding: 10px; text-align: right; color: #059669;">$${profit.toFixed(2)} (${margin}%)</td></tr>
         </tbody>
       </table>
     `;
@@ -1022,7 +1112,7 @@
   function renderPayrollReport() {
     const shiftRows = store.shifts.map(s => {
       const total = calcShiftTotal(s);
-      const rateLabel = s.payModel === 'flat' ? 'Flat Pay' : `$${Number(s.rate).toFixed(2)}/h`;
+      const rateLabel = s.payModel === 'flat' ? 'Monto Fijo' : `$${Number(s.rate).toFixed(2)}/h`;
       const hourLabel = s.payModel === 'flat' ? '-' : s.hours;
 
       return `
@@ -1043,28 +1133,28 @@
     const html = `
       <div style="border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px;">
         <h2 style="margin: 0; color: #1e3a8a;">Anora Clean Solutions</h2>
-        <p style="margin: 4px 0 0 0;"><strong>Cleaner Payroll & Shift Summary Sheet</strong></p>
+        <p style="margin: 4px 0 0 0;"><strong>Planilla Consolidada de Nómina y Turnos de Limpieza</strong></p>
       </div>
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
         <thead>
           <tr style="background: #f1f5f9;">
-            <th style="padding: 6px; text-align: left;">Date</th>
-            <th style="padding: 6px; text-align: left;">Worker</th>
-            <th style="padding: 6px; text-align: left;">Location / Job</th>
-            <th style="padding: 6px; text-align: center;">Hours</th>
-            <th style="padding: 6px; text-align: right;">Rate / Model</th>
-            <th style="padding: 6px; text-align: right;">Total Pay</th>
-            <th style="padding: 6px; text-align: center;">Status</th>
+            <th style="padding: 6px; text-align: left;">Fecha</th>
+            <th style="padding: 6px; text-align: left;">Trabajador</th>
+            <th style="padding: 6px; text-align: left;">Ubicación / Tarea</th>
+            <th style="padding: 6px; text-align: center;">Horas</th>
+            <th style="padding: 6px; text-align: right;">Modalidad</th>
+            <th style="padding: 6px; text-align: right;">Pago Total</th>
+            <th style="padding: 6px; text-align: center;">Estado</th>
           </tr>
         </thead>
         <tbody>
-          ${shiftRows || '<tr><td colspan="7" style="padding:10px; text-align:center;">No shifts logged.</td></tr>'}
+          ${shiftRows || '<tr><td colspan="7" style="padding:10px; text-align:center;">No hay turnos registrados.</td></tr>'}
         </tbody>
       </table>
 
       <div style="text-align: right; font-size: 14px; font-weight: bold; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-        <span>Total Wages: $${totalPay.toFixed(2)} CAD</span>
+        <span>Nómina Total: $${totalPay.toFixed(2)} CAD</span>
       </div>
     `;
     document.getElementById('station-content').innerHTML = html;
@@ -1074,7 +1164,7 @@
     const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `anora_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `anora_respaldo_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
   }
 
