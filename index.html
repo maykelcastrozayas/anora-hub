@@ -336,6 +336,7 @@
   if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
 
   let editingContractId = null;
+  let editingTaskId = null;
 
   function calcShiftTotal(s) {
     if (s.payModel === 'flat') {
@@ -413,6 +414,13 @@
     return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
   }
 
+  function editTask(id) {
+    const task = store.tasks.find(t => t.id === id);
+    if (!task) return;
+    editingTaskId = id;
+    openModal('task', task);
+  }
+
   function renderApp() {
     const totalRev = store.invoices.reduce((acc, inv) => acc + (inv.subtotal * 1.13), 0);
     const supplyCosts = store.costs.reduce((acc, c) => acc + c.amount, 0);
@@ -464,7 +472,8 @@
             <td><span class="badge ${timelineBadge}">${timelineLabel}</span></td>
             <td><span class="badge ${t.status === 'Completado' ? 'badge-success' : 'badge-warning'}">${t.status}</span></td>
             <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="toggleTaskStatus('${t.id}')">${t.status === 'Completado' ? 'Marcar Pendiente' : 'Completar'}</button>
+              <button style="padding:4px 8px; font-size:11px;" onclick="editTask('${t.id}')">Editar</button>
+              <button style="padding:4px 8px; font-size:11px;" onclick="toggleTaskStatus('${t.id}')">${t.status === 'Completado' ? 'Pendiente' : 'Completar'}</button>
               <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('tasks', '${t.id}')">Eliminar</button>
             </td>
           </tr>
@@ -701,14 +710,22 @@
     form.onsubmit = (e) => { e.preventDefault(); handleModalSubmit(mode); };
 
     if (mode === 'task') {
-      title.textContent = 'Programar Tarea u Operación';
+      title.textContent = existingData ? 'Editar Tarea u Operación' : 'Programar Tarea u Operación';
+      
       let staffOpts = '<option value="Sin Asignar">-- Sin Asignar --</option>';
-      store.staff.forEach(s => { staffOpts += `<option value="${s.name}">${s.name}</option>`; });
+      store.staff.forEach(s => {
+        const isSelected = existingData && existingData.assignedStaff === s.name ? 'selected' : '';
+        staffOpts += `<option value="${s.name}" ${isSelected}>${s.name}</option>`;
+      });
 
       let facilityOpts = '<option value="General / Oficina">General / Oficina</option>';
-      store.contracts.forEach(c => { facilityOpts += `<option value="${c.client}">${c.client}</option>`; });
+      store.contracts.forEach(c => {
+        const isSelected = existingData && existingData.facility === c.client ? 'selected' : '';
+        facilityOpts += `<option value="${c.client}" ${isSelected}>${c.client}</option>`;
+      });
 
-      const taskTypeOptions = store.customTaskTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+      const selectedType = existingData ? existingData.type : '';
+      const taskTypeOptions = store.customTaskTypes.map(t => `<option value="${t}" ${t === selectedType ? 'selected' : ''}>${t}</option>`).join('');
 
       container.innerHTML = `
         <div class="form-group">
@@ -728,11 +745,11 @@
           </div>
         </div>
 
-        <div class="form-group"><label>Título o Descripción</label><input required id="f-t-title" placeholder="Ej. Decapado de piso o entrega de suministros"></div>
+        <div class="form-group"><label>Título o Descripción</label><input required id="f-t-title" placeholder="Ej. Decapado de piso o entrega de suministros" value="${existingData ? existingData.title : ''}"></div>
         <div class="form-group"><label>Instalación / Ubicación</label><select id="f-t-facility">${facilityOpts}</select></div>
         <div class="form-group"><label>Personal Asignado</label><select id="f-t-staff">${staffOpts}</select></div>
-        <div class="form-group"><label>Fecha de Ejecución</label><input type="date" required id="f-t-date" value="${new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor"></div>
+        <div class="form-group"><label>Fecha de Ejecución</label><input type="date" required id="f-t-date" value="${existingData ? existingData.date : new Date().toISOString().split('T')[0]}"></div>
+        <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor" value="${existingData && existingData.notes ? existingData.notes : ''}"></div>
       `;
       setTimeout(renderCustomTaskTypesUI, 50);
     } else if (mode === 'contract') {
@@ -889,16 +906,26 @@
 
   function handleModalSubmit(mode) {
     if (mode === 'task') {
-      store.tasks.push({
-        id: Date.now().toString(),
+      const taskPayload = {
         type: document.getElementById('f-t-type').value,
         title: document.getElementById('f-t-title').value,
         facility: document.getElementById('f-t-facility').value,
         assignedStaff: document.getElementById('f-t-staff').value,
         date: document.getElementById('f-t-date').value,
-        notes: document.getElementById('f-t-notes').value,
-        status: 'Pendiente'
-      });
+        notes: document.getElementById('f-t-notes').value
+      };
+
+      if (editingTaskId) {
+        const idx = store.tasks.findIndex(t => t.id === editingTaskId);
+        if (idx !== -1) {
+          store.tasks[idx] = { ...store.tasks[idx], ...taskPayload };
+        }
+        editingTaskId = null;
+      } else {
+        taskPayload.id = Date.now().toString();
+        taskPayload.status = 'Pendiente';
+        store.tasks.push(taskPayload);
+      }
     } else if (mode === 'contract') {
       const checkedCleaners = Array.from(document.querySelectorAll('input[name="cleaner-check"]:checked')).map(cb => cb.value);
 
@@ -972,12 +999,12 @@
 
   function closeModal() { 
     editingContractId = null;
+    editingTaskId = null;
     document.getElementById('entry-modal').style.display = 'none'; 
   }
   
   function closePrintModal() { document.getElementById('print-modal').style.display = 'none'; }
 
-  // FACTURA OFICIAL 100% EN INGLÉS PARA EL CLIENTE
   function printInvoice(invId) {
     const inv = store.invoices.find(i => i.id === invId);
     if (!inv) return;
