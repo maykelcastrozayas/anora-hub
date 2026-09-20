@@ -147,7 +147,7 @@
     <table>
       <thead>
         <tr>
-          <th>Fecha</th>
+          <th>Fecha (Día de la Semana)</th>
           <th>Tipo</th>
           <th>Título / Descripción</th>
           <th>Instalación / Ubicación</th>
@@ -320,6 +320,11 @@
     "Cuidado de Pisos (Decapado / Encerado)"
   ];
 
+  const DEFAULT_FACILITIES = [
+    "General / Oficina",
+    "Instalación Externa / Trabajo Puntual"
+  ];
+
   let store = JSON.parse(localStorage.getItem('anora_os_db')) || {
     contracts: [],
     invoices: [],
@@ -327,13 +332,15 @@
     staff: [],
     shifts: [],
     tasks: [],
-    customTaskTypes: DEFAULT_TASK_TYPES
+    customTaskTypes: DEFAULT_TASK_TYPES,
+    customFacilities: DEFAULT_FACILITIES
   };
 
   if (!store.staff) store.staff = [];
   if (!store.shifts) store.shifts = [];
   if (!store.tasks) store.tasks = [];
   if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
+  if (!store.customFacilities || store.customFacilities.length === 0) store.customFacilities = [...DEFAULT_FACILITIES];
 
   let editingContractId = null;
   let editingTaskId = null;
@@ -343,6 +350,34 @@
       return Number(s.flatPay || 0);
     }
     return Number(s.hours || 0) * Number(s.rate || 0);
+  }
+
+  function formatDisplayDateWithDay(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const dayName = days[d.getDay()];
+    return `${dayName}, ${dateStr}`;
+  }
+
+  function getFullDayText(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return '';
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const fullDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    return `📅 ${fullDays[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`;
+  }
+
+  function updateTaskDayPreview() {
+    const input = document.getElementById('f-t-date');
+    const label = document.getElementById('task-day-preview');
+    if (input && label) {
+      label.textContent = getFullDayText(input.value);
+    }
   }
 
   async function loadCloudData() {
@@ -360,6 +395,7 @@
           if (!store.shifts) store.shifts = [];
           if (!store.tasks) store.tasks = [];
           if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
+          if (!store.customFacilities || store.customFacilities.length === 0) store.customFacilities = [...DEFAULT_FACILITIES];
           localStorage.setItem('anora_os_db', JSON.stringify(store));
           renderApp();
         }
@@ -387,7 +423,11 @@
 
   function clearAllData() {
     if (confirm("¿Estás seguro de que deseas restablecer todos los registros permanentemente?")) {
-      store = { contracts: [], invoices: [], costs: [], staff: [], shifts: [], tasks: [], customTaskTypes: [...DEFAULT_TASK_TYPES] };
+      store = { 
+        contracts: [], invoices: [], costs: [], staff: [], shifts: [], tasks: [], 
+        customTaskTypes: [...DEFAULT_TASK_TYPES], 
+        customFacilities: [...DEFAULT_FACILITIES] 
+      };
       saveStore();
     }
   }
@@ -473,7 +513,7 @@
 
         return `
           <tr style="${t.status === 'Completado' ? 'opacity: 0.6;' : ''}">
-            <td><strong>${t.date}</strong></td>
+            <td><strong style="color: var(--cyan);">${formatDisplayDateWithDay(t.date)}</strong></td>
             <td><span class="badge badge-purple">${t.type}</span></td>
             <td><strong>${t.title}</strong>${t.notes ? `<br><small style="color: var(--text-muted);">${t.notes}</small>` : ''}</td>
             <td><strong>${t.facility || 'General'}</strong></td>
@@ -694,6 +734,11 @@
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
   }
 
+  function toggleCustomFacilityBox() {
+    const box = document.getElementById('custom-facilities-box');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
   function addCustomTaskType() {
     const input = document.getElementById('new-task-type-input');
     const val = input.value.trim();
@@ -735,6 +780,64 @@
     sel.innerHTML = store.customTaskTypes.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
   }
 
+  function addCustomFacility() {
+    const input = document.getElementById('new-facility-input');
+    const val = input.value.trim();
+    if (!val) return;
+    if (!store.customFacilities.includes(val)) {
+      store.customFacilities.push(val);
+      saveStore();
+      renderCustomFacilitiesUI();
+      refreshTaskFacilitySelect(val);
+      document.getElementById('f-t-facility').value = val;
+    }
+    input.value = '';
+  }
+
+  function removeCustomFacility(facToRemove) {
+    if (confirm(`¿Eliminar el local "${facToRemove}" de tus opciones guardadas?`)) {
+      store.customFacilities = store.customFacilities.filter(f => f !== facToRemove);
+      if (store.customFacilities.length === 0) store.customFacilities = [...DEFAULT_FACILITIES];
+      saveStore();
+      renderCustomFacilitiesUI();
+      refreshTaskFacilitySelect();
+    }
+  }
+
+  function renderCustomFacilitiesUI() {
+    const list = document.getElementById('facility-tag-list-container');
+    if (!list) return;
+    list.innerHTML = store.customFacilities.map(f => `
+      <div class="tag-chip">
+        <span>${f}</span>
+        <span onclick="removeCustomFacility('${f}')">✕</span>
+      </div>
+    `).join('');
+  }
+
+  function refreshTaskFacilitySelect(selectedVal = null) {
+    const sel = document.getElementById('f-t-facility-sel');
+    if (!sel) return;
+    const currentVal = selectedVal || sel.value;
+
+    let opts = '<option value="">-- Seleccionar local / instalación guardada --</option>';
+    if (store.contracts && store.contracts.length > 0) {
+      opts += '<optgroup label="Contratos Activos">';
+      store.contracts.forEach(c => {
+        opts += `<option value="${c.client}" ${c.client === currentVal ? 'selected' : ''}>${c.client}</option>`;
+      });
+      opts += '</optgroup>';
+    }
+
+    opts += '<optgroup label="Locales y Clientes Registrados">';
+    store.customFacilities.forEach(f => {
+      opts += `<option value="${f}" ${f === currentVal ? 'selected' : ''}>${f}</option>`;
+    });
+    opts += '</optgroup>';
+
+    sel.innerHTML = opts;
+  }
+
   function onTaskFacilitySelectChange() {
     const sel = document.getElementById('f-t-facility-sel');
     const input = document.getElementById('f-t-facility');
@@ -770,13 +873,26 @@
 
       if (!staffCheckboxes) staffCheckboxes = '<p style="color: var(--text-muted); font-size:12px;">No hay personal registrado en el directorio.</p>';
 
-      let facilityOpts = '<option value="">-- Seleccionar de contratos registrados --</option>';
-      store.contracts.forEach(c => {
-        facilityOpts += `<option value="${c.client}">${c.client}</option>`;
+      const selectedFacility = existingData ? (existingData.facility || '') : '';
+      let facilityOpts = '<option value="">-- Seleccionar local / instalación guardada --</option>';
+      if (store.contracts && store.contracts.length > 0) {
+        facilityOpts += '<optgroup label="Contratos Activos">';
+        store.contracts.forEach(c => {
+          facilityOpts += `<option value="${c.client}" ${c.client === selectedFacility ? 'selected' : ''}>${c.client}</option>`;
+        });
+        facilityOpts += '</optgroup>';
+      }
+
+      facilityOpts += '<optgroup label="Locales y Clientes Registrados">';
+      store.customFacilities.forEach(f => {
+        facilityOpts += `<option value="${f}" ${f === selectedFacility ? 'selected' : ''}>${f}</option>`;
       });
+      facilityOpts += '</optgroup>';
 
       const selectedType = existingData ? existingData.type : '';
       const taskTypeOptions = store.customTaskTypes.map(t => `<option value="${t}" ${t === selectedType ? 'selected' : ''}>${t}</option>`).join('');
+
+      const defaultDate = existingData ? existingData.date : new Date().toISOString().split('T')[0];
 
       container.innerHTML = `
         <div class="form-group">
@@ -799,9 +915,21 @@
         <div class="form-group"><label>Título o Descripción de la Tarea</label><input required id="f-t-title" placeholder="Ej. Decapado de piso, entrega de químicos o llaves" value="${existingData ? existingData.title : ''}"></div>
 
         <div class="form-group">
-          <label>Instalación / Ubicación</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label style="margin:0;">Instalación / Local / Ubicación</label>
+            <button type="button" class="btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="toggleCustomFacilityBox()">⚙️ Gestionar Locales</button>
+          </div>
           <select id="f-t-facility-sel" onchange="onTaskFacilitySelectChange()" style="margin-bottom:6px;">${facilityOpts}</select>
-          <input required id="f-t-facility" placeholder="Escribe o edita la ubicación (ej. Acme Logistics - Bodega 2)" value="${existingData ? (existingData.facility || '') : ''}">
+          <input required id="f-t-facility" placeholder="Escribe o edita la ubicación (ej. Acme Logistics - Bodega 2)" value="${selectedFacility}">
+
+          <div id="custom-facilities-box" class="tag-manager" style="display:none;">
+            <label style="font-size:11px; color:var(--text-muted);">Añadir nuevo local recurrente a la lista:</label>
+            <div style="display:flex; gap:6px; margin-top:4px;">
+              <input id="new-facility-input" placeholder="Ej. Gimnasio FitLife o Plaza Norte" style="flex:1;">
+              <button type="button" style="padding:6px 10px;" onclick="addCustomFacility()">+ Añadir</button>
+            </div>
+            <div class="tag-list" id="facility-tag-list-container"></div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -809,10 +937,19 @@
           <div class="checkbox-box">${staffCheckboxes}</div>
         </div>
 
-        <div class="form-group"><label>Fecha de Ejecución</label><input type="date" required id="f-t-date" value="${existingData ? existingData.date : new Date().toISOString().split('T')[0]}"></div>
+        <div class="form-group">
+          <label>Fecha de Ejecución (Selecciona en el calendario)</label>
+          <input type="date" required id="f-t-date" value="${defaultDate}" onchange="updateTaskDayPreview()">
+          <div id="task-day-preview" style="font-size: 12px; color: var(--cyan); font-weight: bold; margin-top: 4px;"></div>
+        </div>
+
         <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor en sitio" value="${existingData && existingData.notes ? existingData.notes : ''}"></div>
       `;
-      setTimeout(renderCustomTaskTypesUI, 50);
+      setTimeout(() => {
+        renderCustomTaskTypesUI();
+        renderCustomFacilitiesUI();
+        updateTaskDayPreview();
+      }, 50);
     } else if (mode === 'contract') {
       title.textContent = existingData ? 'Editar Contrato / Reasignar Personal' : 'Nuevo Contrato o Propuesta';
       const assignedList = existingData ? (existingData.assignedCleaners || []) : [];
@@ -888,11 +1025,21 @@
 
       if (!staffOpts) staffOpts = '<option value="">No hay personal registrado</option>';
 
-      let facilityOpts = '<option value="">-- Ingreso Manual de Instalación --</option>';
-      store.contracts.forEach(c => {
-        const cleanersAttr = (c.assignedCleaners && c.assignedCleaners.length > 0) ? c.assignedCleaners.join(',') : '';
-        facilityOpts += `<option value="${c.client}" data-cleaners="${cleanersAttr}">${c.client}</option>`;
+      let facilityOpts = '<option value="">-- Seleccionar Local / Instalación --</option>';
+      if (store.contracts && store.contracts.length > 0) {
+        facilityOpts += '<optgroup label="Contratos Activos">';
+        store.contracts.forEach(c => {
+          const cleanersAttr = (c.assignedCleaners && c.assignedCleaners.length > 0) ? c.assignedCleaners.join(',') : '';
+          facilityOpts += `<option value="${c.client}" data-cleaners="${cleanersAttr}">${c.client}</option>`;
+        });
+        facilityOpts += '</optgroup>';
+      }
+
+      facilityOpts += '<optgroup label="Locales Registrados">';
+      store.customFacilities.forEach(f => {
+        facilityOpts += `<option value="${f}">${f}</option>`;
       });
+      facilityOpts += '</optgroup>';
 
       container.innerHTML = `
         <div class="form-group">
