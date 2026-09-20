@@ -71,7 +71,7 @@
     .form-group input, .form-group select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: #0f172a; color: #fff; font-size: 13px; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 
-    .checkbox-box { background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; max-height: 120px; overflow-y: auto; }
+    .checkbox-box { background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; max-height: 130px; overflow-y: auto; }
     .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
     .checkbox-item input[type="checkbox"] { width: auto; margin: 0; }
 
@@ -150,7 +150,7 @@
           <th>Fecha</th>
           <th>Tipo</th>
           <th>Título / Descripción</th>
-          <th>Instalación / Cliente</th>
+          <th>Instalación / Ubicación</th>
           <th>Personal Asignado</th>
           <th>Plazo</th>
           <th>Estado</th>
@@ -184,7 +184,7 @@
   <div class="dashboard-grid">
     <div class="panel">
       <div class="panel-header">
-        <h2>Directorio de Limpiadores y Personal</h2>
+        <h2>Directorio de Limpiadores y Supervisores</h2>
       </div>
       <table>
         <thead>
@@ -202,13 +202,13 @@
 
     <div class="panel">
       <div class="panel-header">
-        <h2>Registro de Turnos y Pagos de Nómina</h2>
+        <h2>Registro de Turnos y Pagos / Retiros</h2>
       </div>
       <table>
         <thead>
           <tr>
             <th>Fecha</th>
-            <th>Limpiador</th>
+            <th>Persona</th>
             <th>Instalación / Trabajo</th>
             <th>Modalidad y Total</th>
             <th>Estado</th>
@@ -462,13 +462,22 @@
           timelineLabel = 'Mañana';
         }
 
+        let staffBadges = '';
+        if (Array.isArray(t.assignedStaff) && t.assignedStaff.length > 0) {
+          staffBadges = t.assignedStaff.map(name => `<span class="badge badge-cyan">${name}</span> `).join('');
+        } else if (typeof t.assignedStaff === 'string' && t.assignedStaff && t.assignedStaff !== 'Sin Asignar') {
+          staffBadges = `<span class="badge badge-cyan">${t.assignedStaff}</span>`;
+        } else {
+          staffBadges = `<span class="badge badge-gray">Sin Asignar</span>`;
+        }
+
         return `
           <tr style="${t.status === 'Completado' ? 'opacity: 0.6;' : ''}">
             <td><strong>${t.date}</strong></td>
             <td><span class="badge badge-purple">${t.type}</span></td>
             <td><strong>${t.title}</strong>${t.notes ? `<br><small style="color: var(--text-muted);">${t.notes}</small>` : ''}</td>
-            <td>${t.facility || 'General'}</td>
-            <td>${t.assignedStaff || 'Sin Asignar'}</td>
+            <td><strong>${t.facility || 'General'}</strong></td>
+            <td>${staffBadges}</td>
             <td><span class="badge ${timelineBadge}">${timelineLabel}</span></td>
             <td><span class="badge ${t.status === 'Completado' ? 'badge-success' : 'badge-warning'}">${t.status}</span></td>
             <td style="display:flex; gap:6px;">
@@ -524,17 +533,23 @@
     const stBody = document.getElementById('staff-tbody');
     stBody.innerHTML = store.staff.length === 0
       ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay personal registrado.</td></tr>'
-      : store.staff.map(s => `
-        <tr>
-          <td><strong>${s.name}</strong></td>
-          <td><span class="badge badge-cyan">${s.role}</span></td>
-          <td>$${Number(s.rate).toFixed(2)}/hr</td>
-          <td>${s.phone || 'N/A'}</td>
-          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('staff', '${s.id}')">Eliminar</button></td>
-        </tr>
-      `).join('');
+      : store.staff.map(s => {
+        const rateLabel = s.role.includes('Supervisor') 
+          ? `<span class="badge badge-purple">Adjudicación / Dueño</span>`
+          : `$${Number(s.rate || 0).toFixed(2)}/hr`;
 
-    // Turnos
+        return `
+          <tr>
+            <td><strong>${s.name}</strong></td>
+            <td><span class="badge badge-cyan">${s.role}</span></td>
+            <td>${rateLabel}</td>
+            <td>${s.phone || 'N/A'}</td>
+            <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('staff', '${s.id}')">Eliminar</button></td>
+          </tr>
+        `;
+      }).join('');
+
+    // Turnos / Pagos
     const shBody = document.getElementById('shifts-tbody');
     shBody.innerHTML = store.shifts.length === 0
       ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay turnos registrados.</td></tr>'
@@ -637,6 +652,23 @@
     openModal('contract', contract);
   }
 
+  function onStaffRoleChange() {
+    const role = document.getElementById('f-st-role').value;
+    const rateBlock = document.getElementById('st-rate-block');
+    const rateInput = document.getElementById('f-st-rate');
+    if (role.includes('Supervisor')) {
+      rateBlock.style.opacity = '0.5';
+      rateInput.value = '0.00';
+      rateInput.disabled = true;
+      rateInput.required = false;
+    } else {
+      rateBlock.style.opacity = '1';
+      rateInput.disabled = false;
+      rateInput.required = true;
+      if (rateInput.value === '0.00') rateInput.value = '';
+    }
+  }
+
   function togglePayModelFields() {
     const model = document.getElementById('f-sh-pay-model').value;
     const hourlyBlock = document.getElementById('sh-hourly-block');
@@ -703,6 +735,14 @@
     sel.innerHTML = store.customTaskTypes.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
   }
 
+  function onTaskFacilitySelectChange() {
+    const sel = document.getElementById('f-t-facility-sel');
+    const input = document.getElementById('f-t-facility');
+    if (sel.value) {
+      input.value = sel.value;
+    }
+  }
+
   function openModal(mode, existingData = null) {
     const container = document.getElementById('dynamic-fields');
     const title = document.getElementById('modal-title');
@@ -712,16 +752,27 @@
     if (mode === 'task') {
       title.textContent = existingData ? 'Editar Tarea u Operación' : 'Programar Tarea u Operación';
       
-      let staffOpts = '<option value="Sin Asignar">-- Sin Asignar --</option>';
-      store.staff.forEach(s => {
-        const isSelected = existingData && existingData.assignedStaff === s.name ? 'selected' : '';
-        staffOpts += `<option value="${s.name}" ${isSelected}>${s.name}</option>`;
-      });
+      let assignedList = [];
+      if (existingData) {
+        if (Array.isArray(existingData.assignedStaff)) {
+          assignedList = existingData.assignedStaff;
+        } else if (typeof existingData.assignedStaff === 'string' && existingData.assignedStaff !== 'Sin Asignar') {
+          assignedList = [existingData.assignedStaff];
+        }
+      }
 
-      let facilityOpts = '<option value="General / Oficina">General / Oficina</option>';
+      let staffCheckboxes = store.staff.map(s => `
+        <div class="checkbox-item">
+          <input type="checkbox" name="task-staff-check" value="${s.name}" ${assignedList.includes(s.name) ? 'checked' : ''}>
+          <span><strong>${s.name}</strong> (${s.role})</span>
+        </div>
+      `).join('');
+
+      if (!staffCheckboxes) staffCheckboxes = '<p style="color: var(--text-muted); font-size:12px;">No hay personal registrado en el directorio.</p>';
+
+      let facilityOpts = '<option value="">-- Seleccionar de contratos registrados --</option>';
       store.contracts.forEach(c => {
-        const isSelected = existingData && existingData.facility === c.client ? 'selected' : '';
-        facilityOpts += `<option value="${c.client}" ${isSelected}>${c.client}</option>`;
+        facilityOpts += `<option value="${c.client}">${c.client}</option>`;
       });
 
       const selectedType = existingData ? existingData.type : '';
@@ -745,11 +796,21 @@
           </div>
         </div>
 
-        <div class="form-group"><label>Título o Descripción</label><input required id="f-t-title" placeholder="Ej. Decapado de piso o entrega de suministros" value="${existingData ? existingData.title : ''}"></div>
-        <div class="form-group"><label>Instalación / Ubicación</label><select id="f-t-facility">${facilityOpts}</select></div>
-        <div class="form-group"><label>Personal Asignado</label><select id="f-t-staff">${staffOpts}</select></div>
+        <div class="form-group"><label>Título o Descripción de la Tarea</label><input required id="f-t-title" placeholder="Ej. Decapado de piso, entrega de químicos o llaves" value="${existingData ? existingData.title : ''}"></div>
+
+        <div class="form-group">
+          <label>Instalación / Ubicación</label>
+          <select id="f-t-facility-sel" onchange="onTaskFacilitySelectChange()" style="margin-bottom:6px;">${facilityOpts}</select>
+          <input required id="f-t-facility" placeholder="Escribe o edita la ubicación (ej. Acme Logistics - Bodega 2)" value="${existingData ? (existingData.facility || '') : ''}">
+        </div>
+
+        <div class="form-group">
+          <label>Personal Asignado (Puedes marcar varios)</label>
+          <div class="checkbox-box">${staffCheckboxes}</div>
+        </div>
+
         <div class="form-group"><label>Fecha de Ejecución</label><input type="date" required id="f-t-date" value="${existingData ? existingData.date : new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor" value="${existingData && existingData.notes ? existingData.notes : ''}"></div>
+        <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor en sitio" value="${existingData && existingData.notes ? existingData.notes : ''}"></div>
       `;
       setTimeout(renderCustomTaskTypesUI, 50);
     } else if (mode === 'contract') {
@@ -800,16 +861,31 @@
         <div class="form-group"><label>Expiry / Decision Date</label><input type="date" required id="f-end" value="${existingData ? existingData.expiry : ''}"></div>
       `;
     } else if (mode === 'staff') {
-      title.textContent = 'Registrar Empleado / Contratista';
+      title.textContent = 'Registrar Empleado o Supervisor';
       container.innerHTML = `
         <div class="form-group"><label>Nombre Completo</label><input required id="f-st-name"></div>
-        <div class="form-group"><label>Cargo / Rol</label><select id="f-st-role"><option value="Limpiador Comercial">Limpiador Comercial</option><option value="Supervisor de Zona">Supervisor de Zona</option><option value="Subcontratista">Subcontratista Independiente</option></select></div>
-        <div class="form-group"><label>Tarifa Base por Hora ($ CAD)</label><input type="number" step="0.50" required id="f-st-rate" placeholder="20.00"></div>
+        <div class="form-group">
+          <label>Cargo / Rol</label>
+          <select id="f-st-role" onchange="onStaffRoleChange()">
+            <option value="Limpiador Comercial">Limpiador Comercial</option>
+            <option value="Supervisor de Zona / Dueño">Supervisor de Zona / Dueño (Sin tarifa fija)</option>
+            <option value="Subcontratista">Subcontratista Independiente</option>
+          </select>
+        </div>
+        <div class="form-group" id="st-rate-block">
+          <label>Tarifa Base por Hora ($ CAD) <small style="color:var(--text-muted);">(No aplica para Supervisor / Dueño)</small></label>
+          <input type="number" step="0.50" required id="f-st-rate" placeholder="20.00">
+        </div>
         <div class="form-group"><label>Teléfono de Contacto</label><input id="f-st-phone" placeholder="(905) 555-0123"></div>
       `;
     } else if (mode === 'shift') {
-      title.textContent = 'Registrar Turno o Pago a Personal';
-      let staffOpts = store.staff.map(s => `<option value="${s.name}" data-rate="${s.rate}">${s.name} (Base $${s.rate}/hr)</option>`).join('');
+      title.textContent = 'Registrar Turno o Adjudicación de Pago';
+      let staffOpts = store.staff.map(s => {
+        const isOwner = s.role.includes('Supervisor');
+        const badge = isOwner ? 'Adjudicación / Dueño' : `$${s.rate}/hr base`;
+        return `<option value="${s.name}" data-rate="${s.rate || 0}" data-owner="${isOwner ? 'true' : 'false'}">${s.name} (${badge})</option>`;
+      }).join('');
+
       if (!staffOpts) staffOpts = '<option value="">No hay personal registrado</option>';
 
       let facilityOpts = '<option value="">-- Ingreso Manual de Instalación --</option>';
@@ -824,14 +900,14 @@
           <select id="f-sh-facility-sel" onchange="onShiftFacilityChange()">${facilityOpts}</select>
         </div>
         <div class="form-group"><label>O Escribe el Nombre de la Instalación</label><input id="f-sh-facility" placeholder="Acme Logistics"></div>
-        <div class="form-group"><label>Seleccionar Limpiador</label><select id="f-sh-staff" onchange="autoFillRate()">${staffOpts}</select></div>
+        <div class="form-group"><label>Seleccionar Persona</label><select id="f-sh-staff" onchange="autoFillRate()">${staffOpts}</select></div>
         <div class="form-group"><label>Fecha del Turno / Trabajo</label><input type="date" required id="f-sh-date" value="${new Date().toISOString().split('T')[0]}"></div>
         
         <div class="form-group">
           <label>Modalidad de Pago para este Registro</label>
           <select id="f-sh-pay-model" onchange="togglePayModelFields()">
             <option value="hourly">Pago por Horas (Horas × Tarifa)</option>
-            <option value="flat">Pago Fijo por Trabajo (Monto Cerrado)</option>
+            <option value="flat">Monto Fijo / Adjudicación Directa (Suma pactada)</option>
           </select>
         </div>
 
@@ -847,11 +923,11 @@
         </div>
 
         <div id="sh-flat-block" class="form-group" style="display: none;">
-          <label>Monto Fijo Acordado ($ CAD)</label>
-          <input type="number" step="1.00" id="f-sh-flat-pay" placeholder="Ej. 180.00">
+          <label>Monto Adjudicado / Retiro ($ CAD)</label>
+          <input type="number" step="1.00" id="f-sh-flat-pay" placeholder="Ej. 250.00">
         </div>
 
-        <div class="form-group"><label>Tipo de Servicio</label><select id="f-sh-type"><option value="Turno Regular">Turno Contrato Regular</option><option value="Limpieza Profunda / Especial">Limpieza Profunda / Especial</option><option value="Fin de Obra / Post-Construcción">Fin de Obra / Post-Construcción</option></select></div>
+        <div class="form-group"><label>Tipo de Tarea / Servicio</label><select id="f-sh-type"><option value="Turno Regular">Turno Contrato Regular</option><option value="Supervisión / Inspección">Supervisión / Inspección Técnica</option><option value="Limpieza Profunda / Especial">Limpieza Profunda / Especial</option><option value="Fin de Obra / Post-Construcción">Fin de Obra / Post-Construcción</option></select></div>
       `;
       setTimeout(autoFillRate, 50);
     } else if (mode === 'invoice') {
@@ -897,20 +973,32 @@
   function autoFillRate() {
     const sel = document.getElementById('f-sh-staff');
     if (!sel || !sel.selectedOptions[0]) return;
+    const isOwner = sel.selectedOptions[0].getAttribute('data-owner') === 'true';
     const rate = sel.selectedOptions[0].getAttribute('data-rate');
-    if (rate) {
-      const rateInput = document.getElementById('f-sh-rate');
-      if (rateInput) rateInput.value = rate;
+    const payModelSel = document.getElementById('f-sh-pay-model');
+
+    if (isOwner) {
+      payModelSel.value = 'flat';
+      togglePayModelFields();
+    } else {
+      payModelSel.value = 'hourly';
+      togglePayModelFields();
+      if (rate) {
+        const rateInput = document.getElementById('f-sh-rate');
+        if (rateInput) rateInput.value = rate;
+      }
     }
   }
 
   function handleModalSubmit(mode) {
     if (mode === 'task') {
+      const checkedStaff = Array.from(document.querySelectorAll('input[name="task-staff-check"]:checked')).map(cb => cb.value);
+
       const taskPayload = {
         type: document.getElementById('f-t-type').value,
         title: document.getElementById('f-t-title').value,
         facility: document.getElementById('f-t-facility').value,
-        assignedStaff: document.getElementById('f-t-staff').value,
+        assignedStaff: checkedStaff,
         date: document.getElementById('f-t-date').value,
         notes: document.getElementById('f-t-notes').value
       };
@@ -950,11 +1038,14 @@
         store.contracts.push(contractPayload);
       }
     } else if (mode === 'staff') {
+      const role = document.getElementById('f-st-role').value;
+      const rateVal = role.includes('Supervisor') ? 0 : Number(document.getElementById('f-st-rate').value || 0);
+
       store.staff.push({
         id: Date.now().toString(),
         name: document.getElementById('f-st-name').value,
-        role: document.getElementById('f-st-role').value,
-        rate: Number(document.getElementById('f-st-rate').value),
+        role: role,
+        rate: rateVal,
         phone: document.getElementById('f-st-phone').value
       });
     } else if (mode === 'shift') {
@@ -1090,7 +1181,7 @@
         <h2 style="margin: 0 0 10px 0; color: #0f172a;">Centro de Reportes y Documentos</h2>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button onclick="renderPnLReport()" style="background: #2563eb;">📊 Estado de Resultados (P&L Interno)</button>
-          <button onclick="renderPayrollReport()" style="background: #0891b2;">👷 Resumen de Nómina de Limpiadores</button>
+          <button onclick="renderPayrollReport()" style="background: #0891b2;">👷 Resumen de Nómina y Pagos Directos</button>
         </div>
       </div>
       <div id="station-content">
@@ -1126,7 +1217,7 @@
           <tr><td style="padding: 8px;">Facturación Comercial Neta (Sin HST)</td><td style="padding: 8px; text-align: right; font-weight: bold;">$${baseRev.toFixed(2)}</td></tr>
           <tr><td style="padding: 8px;">Ontario HST Recaudado (13%)</td><td style="padding: 8px; text-align: right;">$${hstRev.toFixed(2)}</td></tr>
           <tr style="background: #f8fafc; font-weight: bold;"><td style="padding: 8px;">Facturación Total Bruta (Con HST)</td><td style="padding: 8px; text-align: right;">$${totalRev.toFixed(2)}</td></tr>
-          <tr><td style="padding: 8px; color: #dc2626;">Costos de Mano de Obra (Horas + Montos Fijos)</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${shiftCosts.toFixed(2)})</td></tr>
+          <tr><td style="padding: 8px; color: #dc2626;">Costos de Mano de Obra y Adjudicaciones</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${shiftCosts.toFixed(2)})</td></tr>
           <tr><td style="padding: 8px; color: #dc2626;">Insumos, Químicos y Desgaste de Maquinaria</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${supplyCosts.toFixed(2)})</td></tr>
           <tr style="background: #f1f5f9; font-weight: bold;"><td style="padding: 8px;">Costo Directo Total de Operación</td><td style="padding: 8px; text-align: right;">$${totalCosts.toFixed(2)}</td></tr>
           <tr style="border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px; background: #ecfdf5;"><td style="padding: 10px;">Beneficio Operativo Bruto</td><td style="padding: 10px; text-align: right; color: #059669;">$${profit.toFixed(2)} (${margin}%)</td></tr>
@@ -1139,7 +1230,7 @@
   function renderPayrollReport() {
     const shiftRows = store.shifts.map(s => {
       const total = calcShiftTotal(s);
-      const rateLabel = s.payModel === 'flat' ? 'Monto Fijo' : `$${Number(s.rate).toFixed(2)}/h`;
+      const rateLabel = s.payModel === 'flat' ? 'Monto Fijo / Adjudicación' : `$${Number(s.rate).toFixed(2)}/h`;
       const hourLabel = s.payModel === 'flat' ? '-' : s.hours;
 
       return `
@@ -1160,14 +1251,14 @@
     const html = `
       <div style="border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px;">
         <h2 style="margin: 0; color: #1e3a8a;">Anora Clean Solutions</h2>
-        <p style="margin: 4px 0 0 0;"><strong>Planilla Consolidada de Nómina y Turnos de Limpieza</strong></p>
+        <p style="margin: 4px 0 0 0;"><strong>Planilla Consolidada de Nómina y Pagos Directos</strong></p>
       </div>
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
         <thead>
           <tr style="background: #f1f5f9;">
             <th style="padding: 6px; text-align: left;">Fecha</th>
-            <th style="padding: 6px; text-align: left;">Trabajador</th>
+            <th style="padding: 6px; text-align: left;">Persona</th>
             <th style="padding: 6px; text-align: left;">Ubicación / Tarea</th>
             <th style="padding: 6px; text-align: center;">Horas</th>
             <th style="padding: 6px; text-align: right;">Modalidad</th>
@@ -1181,7 +1272,7 @@
       </table>
 
       <div style="text-align: right; font-size: 14px; font-weight: bold; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-        <span>Nómina Total: $${totalPay.toFixed(2)} CAD</span>
+        <span>Monto Total Desembolsado: $${totalPay.toFixed(2)} CAD</span>
       </div>
     `;
     document.getElementById('station-content').innerHTML = html;
