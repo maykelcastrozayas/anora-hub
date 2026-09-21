@@ -3,1438 +3,409 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anora Clean Solutions - Centro de Operaciones y Finanzas</title>
+  <title>Control de Pagos</title>
+  
+  <!-- Configuración PWA / App Móvil -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pagos">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2331/2331970.png">
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --border-color: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --purple: #8b5cf6;
-      --cyan: #06b6d4;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --border: #d1d5db;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text-main); padding: 24px; }
-    .container { max-width: 1400px; margin: 0 auto; }
-
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    header h1 { font-size: 24px; font-weight: 700; color: #fff; }
-    header span { color: var(--primary); }
-    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    button { background-color: var(--primary); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s ease-in-out; }
-    button:hover { background-color: var(--primary-hover); }
-    button.btn-secondary { background-color: #475569; }
-    button.btn-secondary:hover { background-color: #334155; }
-    button.btn-cyan { background-color: var(--cyan); color: #0f172a; }
-    button.btn-cyan:hover { background-color: #0891b2; color: #fff; }
-    button.btn-danger { background-color: var(--danger); }
-    button.btn-danger:hover { background-color: #dc2626; }
-    button.btn-purple { background-color: var(--purple); }
-    button.btn-purple:hover { background-color: #7c3aed; }
-
-    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .metric-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 18px; }
-    .metric-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
-    .metric-value { font-size: 24px; font-weight: 700; }
-
-    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-    .panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .panel-header h2 { font-size: 16px; font-weight: 600; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-    th { color: var(--text-muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
-    td { padding: 12px; border-bottom: 1px solid var(--border-color); }
-    tr:last-child td { border-bottom: none; }
-
-    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
-    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
-    .badge-purple { background: rgba(139, 92, 246, 0.2); color: var(--purple); border: 1px solid var(--purple); }
-    .badge-cyan { background: rgba(6, 182, 212, 0.2); color: var(--cyan); border: 1px solid var(--cyan); margin: 2px 0; }
-    .badge-gray { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid var(--border-color); }
-
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; }
-    .modal-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; width: 100%; max-width: 580px; padding: 24px; max-height: 90vh; overflow-y: auto; }
-    .modal-content h3 { margin-bottom: 16px; font-size: 18px; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
-    .form-group input, .form-group select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: #0f172a; color: #fff; font-size: 13px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-
-    .checkbox-box { background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; max-height: 130px; overflow-y: auto; }
-    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
-    .checkbox-item input[type="checkbox"] { width: auto; margin: 0; }
-
-    .tag-manager { background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-top: 8px; }
-    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .tag-chip { display: flex; align-items: center; gap: 6px; background: #334155; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-    .tag-chip span { cursor: pointer; color: var(--danger); font-weight: bold; }
-
-    #print-modal .modal-content { max-width: 850px; background: #fff; color: #111; padding: 36px; border-radius: 4px; }
-    #printable-sheet { line-height: 1.4; font-size: 13px; }
-
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
+    .container { max-width: 1100px; margin: auto; }
+    h1, h2 { margin-top: 0; }
+    .sync-status { font-size: 0.8rem; color: var(--success); font-weight: 600; margin-bottom: 12px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .full-width { grid-column: 1 / -1; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #4b5563; }
+    input, select, textarea, button { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+    button { background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer; }
+    button:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #64748b; margin-top: 8px; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-delete { background: var(--danger); width: auto; padding: 6px 10px; font-size: 0.8rem; }
+    .btn-edit { background: var(--warning); width: auto; padding: 6px 10px; font-size: 0.8rem; margin-right: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.88rem; vertical-align: top; }
+    th { background: #f8fafc; font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-completado { background: #dcfce7; color: var(--success); }
+    .badge-parcial { background: #fef3c7; color: var(--warning); }
+    .badge-pendiente { background: #fee2e2; color: var(--danger); }
+    .totals { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-weight: bold; background: #f8fafc; padding: 12px; border-radius: 6px; }
+    .totals span { font-size: 0.92rem; }
     @media print {
-      body * { visibility: hidden; }
-      #printable-sheet, #printable-sheet * { visibility: visible; color: #000 !important; background: transparent !important; }
-      #printable-sheet { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-family: Arial, sans-serif; }
-      .no-print { display: none !important; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #ddd !important; padding: 8px !important; }
-      th { background-color: #f2f2f2 !important; }
+      body { background: white; padding: 0; }
+      .no-print { display: none; }
+      .card { border: none; box-shadow: none; padding: 0; }
     }
   </style>
 </head>
 <body>
-
 <div class="container">
-  <header>
-    <div>
-      <h1>Anora <span>Clean Solutions</span></h1>
-      <p style="font-size: 13px; color: var(--text-muted);">Panel de Gestión Operativa y Control Financiero</p>
-    </div>
-    <div class="btn-group">
-      <button onclick="openModal('task')">📅 + Tarea / Evento</button>
-      <button onclick="openModal('contract')">+ Contrato / Agreement</button>
-      <button onclick="openModal('invoice')">+ Invoice / Factura</button>
-      <button onclick="openModal('staff')">+ Personal</button>
-      <button class="btn-cyan" onclick="openModal('shift')">+ Registrar Turno / Pago</button>
-      <button onclick="openModal('cost')">+ Registrar Gasto Insumos</button>
-      <button class="btn-purple" onclick="openPrintStation()">🖨️ Centro de Reportes</button>
-      <button class="btn-secondary" onclick="exportData()">Copia de Seguridad</button>
-      <button class="btn-danger" onclick="clearAllData()">Restablecer Todo</button>
-    </div>
-  </header>
+  <h1>Control de Trabajos y Pagos</h1>
+  <div class="sync-status" id="sync-status">🟢 Conectando a la nube...</div>
 
-  <!-- TARJETAS DE MÉTRICAS -->
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-title">Total Facturado (Gross + HST)</div>
-      <div class="metric-value" id="m-revenue">$0.00</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Costos Directos (Mano de Obra + Insumos)</div>
-      <div class="metric-value" id="m-costs" style="color: var(--danger);">$0.00</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Nómina Pendiente por Pagar</div>
-      <div class="metric-value" id="m-pending-pay" style="color: var(--warning);">$0.00</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Ganancia Bruta (Gross Profit)</div>
-      <div class="metric-value" id="m-profit" style="color: var(--success);">$0.00</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Margen Bruto %</div>
-      <div class="metric-value" id="m-margin">0.0%</div>
-    </div>
-  </div>
-
-  <!-- CALENDARIO DE TAREAS -->
-  <div class="panel">
-    <div class="panel-header">
-      <h2>📅 Cronograma Operativo y Próximas Tareas</h2>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha (Día de la Semana)</th>
-          <th>Tipo</th>
-          <th>Título / Descripción</th>
-          <th>Instalación / Ubicación</th>
-          <th>Personal Asignado</th>
-          <th>Plazo</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tasks-tbody"></tbody>
-    </table>
-  </div>
-
-  <!-- RADAR DE ACCIÓN / VENCIMIENTOS -->
-  <div class="panel">
-    <div class="panel-header">
-      <h2>⚠️ Radar de Acción: Vencimientos y Fechas Límite</h2>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Categoría</th>
-          <th>Referencia / Instalación</th>
-          <th>Hito / Objetivo</th>
-          <th>Fecha Límite</th>
-          <th>Estado del Plazo</th>
-        </tr>
-      </thead>
-      <tbody id="deadlines-tbody"></tbody>
-    </table>
-  </div>
-
-  <!-- PERSONAL Y TURNOS -->
-  <div class="dashboard-grid">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Directorio de Limpiadores y Supervisores</h2>
+  <!-- Formulario -->
+  <section class="card no-print">
+    <h2 id="form-title">Registrar Trabajo</h2>
+    <input type="hidden" id="entry-id">
+    <div class="grid">
+      <div>
+        <label for="fecha">Fecha</label>
+        <input type="date" id="fecha" required>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Cargo</th>
-            <th>Tarifa Base</th>
-            <th>Teléfono</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody id="staff-tbody"></tbody>
-      </table>
+      <div>
+        <label for="local">Local</label>
+        <input type="text" id="local" placeholder="Ej: Sucursal Centro" required>
+      </div>
+      <div>
+        <label for="empleados">Empleados (separados por coma)</label>
+        <input type="text" id="empleados" placeholder="Ej: Maykel, Pedro" required>
+      </div>
+      <div>
+        <label for="pago-esperado">Pago Esperado ($)</label>
+        <input type="number" id="pago-esperado" step="0.01" min="0" required oninput="calcRemaining()">
+      </div>
+      <div>
+        <label for="estado-pago">Estado del Pago</label>
+        <select id="estado-pago" onchange="handleStatusChange()">
+          <option value="pendiente">Pendiente</option>
+          <option value="parcial">Parcial</option>
+          <option value="completado">Completado</option>
+        </select>
+      </div>
+      <div>
+        <label for="monto-pagado">Monto Pagado ($)</label>
+        <input type="number" id="monto-pagado" step="0.01" min="0" value="0" disabled oninput="calcRemaining()">
+      </div>
+      <div>
+        <label for="saldo-pendiente">Saldo Restante ($)</label>
+        <input type="number" id="saldo-pendiente" step="0.01" readonly style="background:#e5e7eb;">
+      </div>
+      <div class="full-width">
+        <label for="comentarios">Comentarios</label>
+        <textarea id="comentarios" rows="2" placeholder="Notas, acuerdos o detalles"></textarea>
+      </div>
+      <div class="full-width">
+        <button id="btn-save" onclick="saveRecord()">Guardar Registro</button>
+        <button id="btn-cancel" class="btn-secondary" onclick="resetForm()" style="display:none;">Cancelar Edición</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reporte -->
+  <section class="card">
+    <div class="no-print">
+      <h2>Reporte de Pagos</h2>
+      <div class="grid">
+        <div>
+          <label for="rep-inicio">Desde</label>
+          <input type="date" id="rep-inicio">
+        </div>
+        <div>
+          <label for="rep-fin">Hasta</label>
+          <input type="date" id="rep-fin">
+        </div>
+        <div>
+          <label for="rep-empleado">Filtrar por Empleado</label>
+          <select id="rep-empleado">
+            <option value="todos">Todos (General)</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:8px;">
+          <button onclick="renderReport()">Filtrar</button>
+          <button class="btn-secondary" onclick="window.print()" style="margin:0;">Imprimir / PDF</button>
+        </div>
+      </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Registro de Turnos y Pagos / Retiros</h2>
-      </div>
+    <!-- Resumen Totales -->
+    <div class="totals" id="resumen-totales">
+      <span>Total Esperado: $0.00</span>
+      <span>Total Pagado: $0.00</span>
+      <span>Total Pendiente: $0.00</span>
+    </div>
+
+    <!-- Tabla -->
+    <div style="overflow-x:auto;">
       <table>
         <thead>
           <tr>
             <th>Fecha</th>
-            <th>Persona</th>
-            <th>Instalación / Trabajo</th>
-            <th>Modalidad y Total</th>
+            <th>Local</th>
+            <th>Empleados</th>
+            <th>Esperado</th>
+            <th>Pagado</th>
+            <th>Resta</th>
             <th>Estado</th>
-            <th>Acciones</th>
+            <th>Comentarios</th>
+            <th class="no-print">Acciones</th>
           </tr>
         </thead>
-        <tbody id="shifts-tbody"></tbody>
+        <tbody id="tabla-registros"></tbody>
       </table>
     </div>
-  </div>
-
-  <!-- CONTRATOS Y FACTURACIÓN -->
-  <div class="dashboard-grid">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Contracts & Proposals Hub</h2>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Client / Facility</th>
-            <th>Crew Assigned</th>
-            <th>Agreed Value</th>
-            <th>Expiry / Term</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="contracts-tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Invoicing & Cash Flow</h2>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Inv #</th>
-            <th>Client</th>
-            <th>Amount + HST</th>
-            <th>Due Date</th>
-            <th>Status</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="invoices-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- GASTOS DE INSUMOS -->
-  <div class="panel">
-    <div class="panel-header">
-      <h2>Gastos en Materiales y Químicos</h2>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Descripción</th>
-          <th>Monto ($ CAD)</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
-      <tbody id="costs-tbody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- VENTANA MODAL DINÁMICA -->
-<div id="entry-modal" class="modal">
-  <div class="modal-content">
-    <h3 id="modal-title">Nuevo Registro</h3>
-    <form id="modal-form">
-      <div id="dynamic-fields"></div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
-        <button type="submit">Guardar Registro</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- VENTANA MODAL PARA REPORTES E IMPRESIÓN -->
-<div id="print-modal" class="modal">
-  <div class="modal-content">
-    <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e0; padding-bottom: 12px; margin-bottom: 18px;">
-      <h3 style="color: #0f172a; margin: 0;">Vista Previa de Documento</h3>
-      <div style="display: flex; gap: 8px;">
-        <button onclick="window.print()" style="background: #10b981;">🖨️ Imprimir / Guardar en PDF</button>
-        <button class="btn-secondary" onclick="closePrintModal()">Cerrar</button>
-      </div>
-    </div>
-    <div id="printable-sheet"></div>
-  </div>
+  </section>
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxNu-K3xQMWzfgnJNysLfGHe7ZP6jrjVx3B75IRrntja12x1MGYhD3ed0WtcOzJMtUa/exec";
+  // ========================================================
+  // REEMPLAZA ESTE OBJETO CON TUS DATOS DEL PASO 1
+  // ========================================================
+  const firebaseConfig = {
+  apiKey: "AIzaSyB4NVyCjDN9TCSAo2JwAb9W9v-_j69QbA4",
+  authDomain: "control-pagos-cb2fa.firebaseapp.com",
+  databaseURL: "https://control-pagos-cb2fa-default-rtdb.firebaseio.com",
+  projectId: "control-pagos-cb2fa",
+  storageBucket: "control-pagos-cb2fa.firebasestorage.app",
+  messagingSenderId: "538885209616",
+  appId: "1:538885209616:web:81800269c2c2d14008d495"
+};
 
-  const DEFAULT_TASK_TYPES = [
-    "Inspección de Calidad",
-    "Limpieza Profunda / Trabajo Especial",
-    "Entrega de Químicos e Insumos",
-    "Reunión con Cliente",
-    "Administración / Cumplimiento",
-    "Cuidado de Pisos (Decapado / Encerado)"
-  ];
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const recordsRef = db.ref('trabajos');
 
-  const DEFAULT_FACILITIES = [
-    "General / Oficina",
-    "Instalación Externa / Trabajo Puntual"
-  ];
+  let records = [];
 
-  let store = JSON.parse(localStorage.getItem('anora_os_db')) || {
-    contracts: [],
-    invoices: [],
-    costs: [],
-    staff: [],
-    shifts: [],
-    tasks: [],
-    customTaskTypes: DEFAULT_TASK_TYPES,
-    customFacilities: DEFAULT_FACILITIES
-  };
-
-  if (!store.staff) store.staff = [];
-  if (!store.shifts) store.shifts = [];
-  if (!store.tasks) store.tasks = [];
-  if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
-  if (!store.customFacilities || store.customFacilities.length === 0) store.customFacilities = [...DEFAULT_FACILITIES];
-
-  let editingContractId = null;
-  let editingTaskId = null;
-
-  function calcShiftTotal(s) {
-    if (s.payModel === 'flat') {
-      return Number(s.flatPay || 0);
-    }
-    return Number(s.hours || 0) * Number(s.rate || 0);
-  }
-
-  function formatDisplayDateWithDay(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) return dateStr;
-    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const dayName = days[d.getDay()];
-    return `${dayName}, ${dateStr}`;
-  }
-
-  function getFullDayText(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) return '';
-    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    const fullDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    return `📅 ${fullDays[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`;
-  }
-
-  function updateTaskDayPreview() {
-    const input = document.getElementById('f-t-date');
-    const label = document.getElementById('task-day-preview');
-    if (input && label) {
-      label.textContent = getFullDayText(input.value);
-    }
-  }
-
-  async function loadCloudData() {
-    try {
-      const res = await fetch(API_URL);
-      const text = await res.text();
-      if (text && text.trim() !== "" && text !== "{}") {
-        const data = JSON.parse(text);
-        if (data && typeof data === 'object') {
-          store = data;
-          if (!store.contracts) store.contracts = [];
-          if (!store.invoices) store.invoices = [];
-          if (!store.costs) store.costs = [];
-          if (!store.staff) store.staff = [];
-          if (!store.shifts) store.shifts = [];
-          if (!store.tasks) store.tasks = [];
-          if (!store.customTaskTypes || store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
-          if (!store.customFacilities || store.customFacilities.length === 0) store.customFacilities = [...DEFAULT_FACILITIES];
-          localStorage.setItem('anora_os_db', JSON.stringify(store));
-          renderApp();
-        }
-      }
-    } catch (err) {
-      console.warn("Modo local activo:", err);
-    }
-  }
-
-  async function saveStore() {
-    localStorage.setItem('anora_os_db', JSON.stringify(store));
-    renderApp();
-
-    try {
-      await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(store)
+  // Sincronización en tiempo real
+  recordsRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    records = [];
+    if (data) {
+      Object.keys(data).forEach(key => {
+        records.push({ id: key, ...data[key] });
       });
-    } catch (err) {
-      console.error("Error al sincronizar con la nube:", err);
     }
-  }
+    populateEmployees();
+    renderReport();
+    document.getElementById('sync-status').innerText = '🟢 Conectado y sincronizado en tiempo real';
+  }, (error) => {
+    document.getElementById('sync-status').innerText = '🔴 Error: ' + error.message;
+  });
 
-  function clearAllData() {
-    if (confirm("¿Estás seguro de que deseas restablecer todos los registros permanentemente?")) {
-      store = { 
-        contracts: [], invoices: [], costs: [], staff: [], shifts: [], tasks: [], 
-        customTaskTypes: [...DEFAULT_TASK_TYPES], 
-        customFacilities: [...DEFAULT_FACILITIES] 
-      };
-      saveStore();
-    }
-  }
-
-  function deleteItem(coll, id) {
-    if (confirm("¿Eliminar este registro?")) {
-      store[coll] = store[coll].filter(item => item.id !== id);
-      saveStore();
-    }
-  }
-
-  function toggleTaskStatus(id) {
-    const task = store.tasks.find(t => t.id === id);
-    if (task) {
-      task.status = task.status === 'Completado' ? 'Pendiente' : 'Completado';
-      saveStore();
-    }
-  }
-
-  function getDaysDiff(dateStr) {
-    const target = new Date(dateStr + 'T00:00:00');
+  function setDefaultDates() {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    
+    document.getElementById('fecha').value = `${y}-${m}-${d}`;
+    document.getElementById('rep-inicio').value = `${y}-${m}-01`;
+    const lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
+    document.getElementById('rep-fin').value = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
   }
 
-  function editTask(id) {
-    const task = store.tasks.find(t => t.id === id);
-    if (!task) return;
-    editingTaskId = id;
-    openModal('task', task);
-  }
+  function handleStatusChange() {
+    const status = document.getElementById('estado-pago').value;
+    const expected = parseFloat(document.getElementById('pago-esperado').value) || 0;
+    const paidInput = document.getElementById('monto-pagado');
 
-  function renderApp() {
-    const totalRev = store.invoices.reduce((acc, inv) => acc + (inv.subtotal * 1.13), 0);
-    const supplyCosts = store.costs.reduce((acc, c) => acc + c.amount, 0);
-    const shiftCosts = store.shifts.reduce((acc, s) => acc + calcShiftTotal(s), 0);
-    const pendingPayroll = store.shifts.filter(s => s.status === 'Pendiente').reduce((acc, s) => acc + calcShiftTotal(s), 0);
-
-    const totalDirectCosts = supplyCosts + shiftCosts;
-    const baseRev = store.invoices.reduce((acc, inv) => acc + inv.subtotal, 0);
-    const grossProfit = baseRev - totalDirectCosts;
-    const margin = baseRev > 0 ? ((grossProfit / baseRev) * 100).toFixed(1) : '0.0';
-
-    document.getElementById('m-revenue').textContent = `$${totalRev.toLocaleString('en-CA', {minimumFractionDigits: 2})}`;
-    document.getElementById('m-costs').textContent = `$${totalDirectCosts.toLocaleString('en-CA', {minimumFractionDigits: 2})}`;
-    document.getElementById('m-pending-pay').textContent = `$${pendingPayroll.toLocaleString('en-CA', {minimumFractionDigits: 2})}`;
-    document.getElementById('m-profit').textContent = `$${grossProfit.toLocaleString('en-CA', {minimumFractionDigits: 2})}`;
-    document.getElementById('m-margin').textContent = `${margin}%`;
-
-    // Tareas
-    store.tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-    const tBody = document.getElementById('tasks-tbody');
-    tBody.innerHTML = store.tasks.length === 0
-      ? '<tr><td colspan="8" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay tareas programadas en el calendario.</td></tr>'
-      : store.tasks.map(t => {
-        const days = getDaysDiff(t.date);
-        let timelineLabel = `${days}d restantes`;
-        let timelineBadge = 'badge-success';
-
-        if (t.status === 'Completado') {
-          timelineBadge = 'badge-gray';
-          timelineLabel = 'Listo';
-        } else if (days < 0) {
-          timelineBadge = 'badge-danger';
-          timelineLabel = `VENCIDO (${Math.abs(days)}d)`;
-        } else if (days === 0) {
-          timelineBadge = 'badge-warning';
-          timelineLabel = 'HOY';
-        } else if (days === 1) {
-          timelineBadge = 'badge-warning';
-          timelineLabel = 'Mañana';
-        }
-
-        let staffBadges = '';
-        if (Array.isArray(t.assignedStaff) && t.assignedStaff.length > 0) {
-          staffBadges = t.assignedStaff.map(name => `<span class="badge badge-cyan">${name}</span> `).join('');
-        } else if (typeof t.assignedStaff === 'string' && t.assignedStaff && t.assignedStaff !== 'Sin Asignar') {
-          staffBadges = `<span class="badge badge-cyan">${t.assignedStaff}</span>`;
-        } else {
-          staffBadges = `<span class="badge badge-gray">Sin Asignar</span>`;
-        }
-
-        return `
-          <tr style="${t.status === 'Completado' ? 'opacity: 0.6;' : ''}">
-            <td><strong style="color: var(--cyan);">${formatDisplayDateWithDay(t.date)}</strong></td>
-            <td><span class="badge badge-purple">${t.type}</span></td>
-            <td><strong>${t.title}</strong>${t.notes ? `<br><small style="color: var(--text-muted);">${t.notes}</small>` : ''}</td>
-            <td><strong>${t.facility || 'General'}</strong></td>
-            <td>${staffBadges}</td>
-            <td><span class="badge ${timelineBadge}">${timelineLabel}</span></td>
-            <td><span class="badge ${t.status === 'Completado' ? 'badge-success' : 'badge-warning'}">${t.status}</span></td>
-            <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="editTask('${t.id}')">Editar</button>
-              <button style="padding:4px 8px; font-size:11px;" onclick="toggleTaskStatus('${t.id}')">${t.status === 'Completado' ? 'Pendiente' : 'Completar'}</button>
-              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('tasks', '${t.id}')">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-    // Radar de Acción
-    const deadlines = [];
-    store.contracts.forEach(c => {
-      const days = getDaysDiff(c.expiry);
-      if (c.type && c.type.includes('Contract')) {
-        const cutoffDate = new Date(c.expiry + 'T00:00:00');
-        cutoffDate.setDate(cutoffDate.getDate() - 30);
-        const cutoffStr = cutoffDate.toISOString().split('T')[0];
-        const cutoffDays = getDaysDiff(cutoffStr);
-        deadlines.push({ cat: 'Contract Notice', ref: c.client, milestone: '30-Day Renewal Window', date: cutoffStr, days: cutoffDays });
-      } else {
-        deadlines.push({ cat: c.type || 'Proposal', ref: c.client, milestone: 'Decision / Completion Deadline', date: c.expiry, days: days });
+    if (status === 'pendiente') {
+      paidInput.value = 0;
+      paidInput.disabled = true;
+    } else if (status === 'completado') {
+      paidInput.value = expected;
+      paidInput.disabled = true;
+    } else {
+      paidInput.disabled = false;
+      if (parseFloat(paidInput.value) >= expected || parseFloat(paidInput.value) === 0) {
+        paidInput.value = '';
       }
+    }
+    calcRemaining();
+  }
+
+  function calcRemaining() {
+    const expected = parseFloat(document.getElementById('pago-esperado').value) || 0;
+    let paid = parseFloat(document.getElementById('monto-pagado').value) || 0;
+    const status = document.getElementById('estado-pago').value;
+
+    if (status === 'completado') paid = expected;
+    if (status === 'pendiente') paid = 0;
+
+    const remaining = Math.max(0, expected - paid);
+    document.getElementById('saldo-pendiente').value = remaining.toFixed(2);
+  }
+
+  function saveRecord() {
+    const id = document.getElementById('entry-id').value;
+    const fecha = document.getElementById('fecha').value;
+    const local = document.getElementById('local').value.trim();
+    const empleadosRaw = document.getElementById('empleados').value.trim();
+    const expected = parseFloat(document.getElementById('pago-esperado').value) || 0;
+    const status = document.getElementById('estado-pago').value;
+    let paid = parseFloat(document.getElementById('monto-pagado').value) || 0;
+    const comentarios = document.getElementById('comentarios').value.trim();
+
+    if (!fecha || !local || !empleadosRaw || expected <= 0) {
+      alert("Por favor completa la fecha, local, empleados y monto esperado.");
+      return;
+    }
+
+    if (status === 'completado') paid = expected;
+    if (status === 'pendiente') paid = 0;
+    const remaining = Math.max(0, expected - paid);
+    const empleados = empleadosRaw.split(',').map(e => e.trim()).filter(e => e.length > 0);
+
+    const recordData = {
+      fecha,
+      local,
+      empleados,
+      pagoEsperado: expected,
+      montoPagado: paid,
+      saldoPendiente: remaining,
+      estado: status,
+      comentarios
+    };
+
+    if (id) {
+      recordsRef.child(id).set(recordData).then(() => resetForm());
+    } else {
+      recordsRef.push(recordData).then(() => resetForm());
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('entry-id').value = '';
+    document.getElementById('form-title').innerText = "Registrar Trabajo";
+    document.getElementById('btn-save').innerText = "Guardar Registro";
+    document.getElementById('btn-cancel').style.display = 'none';
+    document.getElementById('local').value = '';
+    document.getElementById('empleados').value = '';
+    document.getElementById('pago-esperado').value = '';
+    document.getElementById('monto-pagado').value = 0;
+    document.getElementById('monto-pagado').disabled = true;
+    document.getElementById('saldo-pendiente').value = '';
+    document.getElementById('estado-pago').value = 'pendiente';
+    document.getElementById('comentarios').value = '';
+    setDefaultDates();
+  }
+
+  function editRecord(id) {
+    const item = records.find(r => r.id === id);
+    if (!item) return;
+
+    document.getElementById('entry-id').value = item.id;
+    document.getElementById('form-title').innerText = "Editar Trabajo";
+    document.getElementById('btn-save').innerText = "Actualizar Registro";
+    document.getElementById('btn-cancel').style.display = 'inline-block';
+
+    document.getElementById('fecha').value = item.fecha;
+    document.getElementById('local').value = item.local;
+    document.getElementById('empleados').value = item.empleados.join(', ');
+    document.getElementById('pago-esperado').value = item.pagoEsperado;
+    document.getElementById('estado-pago').value = item.estado;
+    document.getElementById('monto-pagado').value = item.montoPagado;
+    document.getElementById('monto-pagado').disabled = (item.estado !== 'parcial');
+    document.getElementById('saldo-pendiente').value = item.saldoPendiente.toFixed(2);
+    document.getElementById('comentarios').value = item.comentarios || '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function deleteRecord(id) {
+    if (confirm("¿Deseas eliminar este registro? Se borrará para ambos.")) {
+      recordsRef.child(id).remove();
+    }
+  }
+
+  function populateEmployees() {
+    const select = document.getElementById('rep-empleado');
+    const currentVal = select.value;
+    const set = new Set();
+    records.forEach(r => (r.empleados || []).forEach(e => set.add(e)));
+
+    select.innerHTML = '<option value="todos">Todos (General)</option>';
+    Array.from(set).sort().forEach(emp => {
+      const opt = document.createElement('option');
+      opt.value = emp;
+      opt.textContent = emp;
+      select.appendChild(opt);
     });
 
-    store.invoices.filter(i => i.status === 'Unpaid').forEach(i => {
-      deadlines.push({ cat: 'Invoice Due', ref: `${i.client} (${i.num})`, milestone: `Payment Due (${i.terms})`, date: i.due, days: getDaysDiff(i.due) });
+    if (Array.from(set).includes(currentVal)) {
+      select.value = currentVal;
+    }
+  }
+
+  function renderReport() {
+    const start = document.getElementById('rep-inicio').value;
+    const end = document.getElementById('rep-fin').value;
+    const empFilter = document.getElementById('rep-empleado').value;
+
+    const filtered = records.filter(r => {
+      const matchDate = (!start || r.fecha >= start) && (!end || r.fecha <= end);
+      const matchEmp = empFilter === 'todos' || (r.empleados && r.empleados.includes(empFilter));
+      return matchDate && matchEmp;
     });
 
-    deadlines.sort((a, b) => a.days - b.days);
+    filtered.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-    const dBody = document.getElementById('deadlines-tbody');
-    dBody.innerHTML = deadlines.length === 0 
-      ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay vencimientos pendientes.</td></tr>' 
-      : deadlines.map(d => {
-        let badge = 'badge-success';
-        let label = `${d.days} días restantes`;
-        if (d.days < 0) { badge = 'badge-danger'; label = `VENCIDO (${Math.abs(d.days)}d)`; }
-        else if (d.days <= 30) { badge = 'badge-warning'; label = `ACCIÓN REQ (${d.days}d)`; }
-        return `
-          <tr>
-            <td><span class="badge badge-purple">${d.cat}</span></td>
-            <td><strong>${d.ref}</strong></td>
-            <td>${d.milestone}</td>
-            <td>${d.date}</td>
-            <td><span class="badge ${badge}">${label}</span></td>
-          </tr>
-        `;
-      }).join('');
+    const tbody = document.getElementById('tabla-registros');
+    tbody.innerHTML = '';
 
-    // Personal
-    const stBody = document.getElementById('staff-tbody');
-    stBody.innerHTML = store.staff.length === 0
-      ? '<tr><td colspan="5" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay personal registrado.</td></tr>'
-      : store.staff.map(s => {
-        const rateLabel = s.role.includes('Supervisor') 
-          ? `<span class="badge badge-purple">Adjudicación / Dueño</span>`
-          : `$${Number(s.rate || 0).toFixed(2)}/hr`;
+    let totExp = 0, totPaid = 0, totRem = 0;
 
-        return `
-          <tr>
-            <td><strong>${s.name}</strong></td>
-            <td><span class="badge badge-cyan">${s.role}</span></td>
-            <td>${rateLabel}</td>
-            <td>${s.phone || 'N/A'}</td>
-            <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('staff', '${s.id}')">Eliminar</button></td>
-          </tr>
-        `;
-      }).join('');
+    filtered.forEach(r => {
+      totExp += r.pagoEsperado || 0;
+      totPaid += r.montoPagado || 0;
+      totRem += r.saldoPendiente || 0;
 
-    // Turnos / Pagos
-    const shBody = document.getElementById('shifts-tbody');
-    shBody.innerHTML = store.shifts.length === 0
-      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay turnos registrados.</td></tr>'
-      : store.shifts.map(s => {
-        const total = calcShiftTotal(s);
-        const details = s.payModel === 'flat' 
-          ? `<span class="badge badge-purple">Monto Fijo</span> <strong>$${total.toFixed(2)}</strong>`
-          : `${s.hours}h @ $${Number(s.rate).toFixed(2)} = <strong>$${total.toFixed(2)}</strong>`;
-
-        return `
-          <tr>
-            <td>${s.date}</td>
-            <td><strong>${s.staffName}</strong></td>
-            <td>${s.facility}</td>
-            <td>${details}</td>
-            <td><span class="badge ${s.status === 'Pagado' ? 'badge-success' : 'badge-warning'}">${s.status}</span></td>
-            <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="toggleShiftPaid('${s.id}')">${s.status === 'Pagado' ? 'Marcar Pendiente' : 'Marcar Pagado'}</button>
-              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('shifts', '${s.id}')">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-    // Contratos
-    const cBody = document.getElementById('contracts-tbody');
-    cBody.innerHTML = store.contracts.length === 0
-      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay contratos registrados.</td></tr>'
-      : store.contracts.map(c => {
-        const freqLabel = c.valueType === 'Yearly Value' ? '/yr' : (c.valueType === 'Special' ? '(Flat)' : '/mo');
-        let assignedBadges = '';
-        if (Array.isArray(c.assignedCleaners) && c.assignedCleaners.length > 0) {
-          assignedBadges = c.assignedCleaners.map(name => `<span class="badge badge-cyan">${name}</span> `).join('');
-        } else {
-          assignedBadges = `<span class="badge badge-gray">Unassigned</span>`;
-        }
-
-        return `
-          <tr>
-            <td><span class="badge ${c.type.includes('Contract') ? 'badge-success' : 'badge-purple'}">${c.type}</span></td>
-            <td><strong>${c.client}</strong></td>
-            <td>${assignedBadges}</td>
-            <td>$${Number(c.value).toFixed(2)} ${freqLabel}</td>
-            <td>${c.expiry}</td>
-            <td style="display:flex; gap:6px;">
-              <button style="padding:4px 8px; font-size:11px;" onclick="editContract('${c.id}')">Editar</button>
-              <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('contracts', '${c.id}')">Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-    // Invoices
-    const iBody = document.getElementById('invoices-tbody');
-    iBody.innerHTML = store.invoices.length === 0
-      ? '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay facturas registradas.</td></tr>'
-      : store.invoices.map(i => `
-        <tr>
-          <td>${i.num}</td>
-          <td>${i.client}</td>
-          <td>$${(i.subtotal * 1.13).toFixed(2)}</td>
-          <td>${i.due}</td>
-          <td><span class="badge ${i.status === 'Paid' ? 'badge-success' : 'badge-danger'}">${i.status}</span></td>
-          <td style="display:flex; gap:6px;">
-            <button style="padding:4px 8px; font-size:11px;" onclick="printInvoice('${i.id}')">Print / PDF</button>
-            <button style="padding:4px 8px; font-size:11px;" onclick="togglePaid('${i.id}')">${i.status === 'Paid' ? 'Marcar Unpaid' : 'Marcar Paid'}</button>
-            <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('invoices', '${i.id}')">Eliminar</button>
-          </td>
-        </tr>
-      `).join('');
-
-    // Gastos Insumos
-    const costBody = document.getElementById('costs-tbody');
-    costBody.innerHTML = store.costs.length === 0
-      ? '<tr><td colspan="4" style="color: var(--text-muted); text-align: center; padding: 18px;">No hay gastos registrados.</td></tr>'
-      : store.costs.map(c => `
-        <tr>
-          <td>${c.date}</td>
-          <td>${c.desc}</td>
-          <td>$${Number(c.amount).toFixed(2)}</td>
-          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteItem('costs', '${c.id}')">Eliminar</button></td>
-        </tr>
-      `).join('');
-  }
-
-  function togglePaid(id) {
-    const inv = store.invoices.find(i => i.id === id);
-    if (inv) { inv.status = inv.status === 'Paid' ? 'Unpaid' : 'Paid'; saveStore(); }
-  }
-
-  function toggleShiftPaid(id) {
-    const shift = store.shifts.find(s => s.id === id);
-    if (shift) { shift.status = shift.status === 'Pagado' ? 'Pendiente' : 'Pagado'; saveStore(); }
-  }
-
-  function editContract(id) {
-    const contract = store.contracts.find(c => c.id === id);
-    if (!contract) return;
-    editingContractId = id;
-    openModal('contract', contract);
-  }
-
-  function onStaffRoleChange() {
-    const role = document.getElementById('f-st-role').value;
-    const rateBlock = document.getElementById('st-rate-block');
-    const rateInput = document.getElementById('f-st-rate');
-    if (role.includes('Supervisor')) {
-      rateBlock.style.opacity = '0.5';
-      rateInput.value = '0.00';
-      rateInput.disabled = true;
-      rateInput.required = false;
-    } else {
-      rateBlock.style.opacity = '1';
-      rateInput.disabled = false;
-      rateInput.required = true;
-      if (rateInput.value === '0.00') rateInput.value = '';
-    }
-  }
-
-  function togglePayModelFields() {
-    const model = document.getElementById('f-sh-pay-model').value;
-    const hourlyBlock = document.getElementById('sh-hourly-block');
-    const flatBlock = document.getElementById('sh-flat-block');
-
-    if (model === 'flat') {
-      hourlyBlock.style.display = 'none';
-      flatBlock.style.display = 'block';
-      document.getElementById('f-sh-hours').required = false;
-      document.getElementById('f-sh-rate').required = false;
-      document.getElementById('f-sh-flat-pay').required = true;
-    } else {
-      hourlyBlock.style.display = 'grid';
-      flatBlock.style.display = 'none';
-      document.getElementById('f-sh-hours').required = true;
-      document.getElementById('f-sh-rate').required = true;
-      document.getElementById('f-sh-flat-pay').required = false;
-    }
-  }
-
-  function toggleCustomTypeBox() {
-    const box = document.getElementById('custom-types-box');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  }
-
-  function toggleCustomFacilityBox() {
-    const box = document.getElementById('custom-facilities-box');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  }
-
-  function addCustomTaskType() {
-    const input = document.getElementById('new-task-type-input');
-    const val = input.value.trim();
-    if (!val) return;
-    if (!store.customTaskTypes.includes(val)) {
-      store.customTaskTypes.push(val);
-      saveStore();
-      renderCustomTaskTypesUI();
-      refreshTaskTypeSelect(val);
-    }
-    input.value = '';
-  }
-
-  function removeCustomTaskType(typeToRemove) {
-    if (confirm(`¿Eliminar la categoría "${typeToRemove}"?`)) {
-      store.customTaskTypes = store.customTaskTypes.filter(t => t !== typeToRemove);
-      if (store.customTaskTypes.length === 0) store.customTaskTypes = [...DEFAULT_TASK_TYPES];
-      saveStore();
-      renderCustomTaskTypesUI();
-      refreshTaskTypeSelect();
-    }
-  }
-
-  function renderCustomTaskTypesUI() {
-    const list = document.getElementById('tag-list-container');
-    if (!list) return;
-    list.innerHTML = store.customTaskTypes.map(t => `
-      <div class="tag-chip">
-        <span>${t}</span>
-        <span onclick="removeCustomTaskType('${t}')">✕</span>
-      </div>
-    `).join('');
-  }
-
-  function refreshTaskTypeSelect(selectedVal = null) {
-    const sel = document.getElementById('f-t-type');
-    if (!sel) return;
-    const currentVal = selectedVal || sel.value;
-    sel.innerHTML = store.customTaskTypes.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
-  }
-
-  function addCustomFacility() {
-    const input = document.getElementById('new-facility-input');
-    const val = input.value.trim();
-    if (!val) return;
-    if (!store.customFacilities.includes(val)) {
-      store.customFacilities.push(val);
-      saveStore();
-      renderCustomFacilitiesUI();
-      refreshTaskFacilitySelect(val);
-      document.getElementById('f-t-facility').value = val;
-    }
-    input.value = '';
-  }
-
-  function removeCustomFacility(facToRemove) {
-    if (confirm(`¿Eliminar el local "${facToRemove}" de tus opciones guardadas?`)) {
-      store.customFacilities = store.customFacilities.filter(f => f !== facToRemove);
-      if (store.customFacilities.length === 0) store.customFacilities = [...DEFAULT_FACILITIES];
-      saveStore();
-      renderCustomFacilitiesUI();
-      refreshTaskFacilitySelect();
-    }
-  }
-
-  function renderCustomFacilitiesUI() {
-    const list = document.getElementById('facility-tag-list-container');
-    if (!list) return;
-    list.innerHTML = store.customFacilities.map(f => `
-      <div class="tag-chip">
-        <span>${f}</span>
-        <span onclick="removeCustomFacility('${f}')">✕</span>
-      </div>
-    `).join('');
-  }
-
-  function refreshTaskFacilitySelect(selectedVal = null) {
-    const sel = document.getElementById('f-t-facility-sel');
-    if (!sel) return;
-    const currentVal = selectedVal || sel.value;
-
-    let opts = '<option value="">-- Seleccionar local / instalación guardada --</option>';
-    if (store.contracts && store.contracts.length > 0) {
-      opts += '<optgroup label="Contratos Activos">';
-      store.contracts.forEach(c => {
-        opts += `<option value="${c.client}" ${c.client === currentVal ? 'selected' : ''}>${c.client}</option>`;
-      });
-      opts += '</optgroup>';
-    }
-
-    opts += '<optgroup label="Locales y Clientes Registrados">';
-    store.customFacilities.forEach(f => {
-      opts += `<option value="${f}" ${f === currentVal ? 'selected' : ''}>${f}</option>`;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${r.fecha}</td>
+        <td><strong>${r.local}</strong></td>
+        <td>${(r.empleados || []).join(', ')}</td>
+        <td>$${(r.pagoEsperado || 0).toFixed(2)}</td>
+        <td>$${(r.montoPagado || 0).toFixed(2)}</td>
+        <td style="color:${r.saldoPendiente > 0 ? 'var(--danger)' : 'inherit'}; font-weight:600;">$${(r.saldoPendiente || 0).toFixed(2)}</td>
+        <td><span class="badge badge-${r.estado}">${(r.estado || '').toUpperCase()}</span></td>
+        <td>${r.comentarios || '-'}</td>
+        <td class="no-print">
+          <button class="btn-edit" onclick="editRecord('${r.id}')">Editar</button>
+          <button class="btn-delete" onclick="deleteRecord('${r.id}')">Borrar</button>
+        </td>
+      `;
+      tbody.appendChild(row);
     });
-    opts += '</optgroup>';
 
-    sel.innerHTML = opts;
-  }
-
-  function onTaskFacilitySelectChange() {
-    const sel = document.getElementById('f-t-facility-sel');
-    const input = document.getElementById('f-t-facility');
-    if (sel.value) {
-      input.value = sel.value;
-    }
-  }
-
-  function openModal(mode, existingData = null) {
-    const container = document.getElementById('dynamic-fields');
-    const title = document.getElementById('modal-title');
-    const form = document.getElementById('modal-form');
-    form.onsubmit = (e) => { e.preventDefault(); handleModalSubmit(mode); };
-
-    if (mode === 'task') {
-      title.textContent = existingData ? 'Editar Tarea u Operación' : 'Programar Tarea u Operación';
-      
-      let assignedList = [];
-      if (existingData) {
-        if (Array.isArray(existingData.assignedStaff)) {
-          assignedList = existingData.assignedStaff;
-        } else if (typeof existingData.assignedStaff === 'string' && existingData.assignedStaff !== 'Sin Asignar') {
-          assignedList = [existingData.assignedStaff];
-        }
-      }
-
-      let staffCheckboxes = store.staff.map(s => `
-        <div class="checkbox-item">
-          <input type="checkbox" name="task-staff-check" value="${s.name}" ${assignedList.includes(s.name) ? 'checked' : ''}>
-          <span><strong>${s.name}</strong> (${s.role})</span>
-        </div>
-      `).join('');
-
-      if (!staffCheckboxes) staffCheckboxes = '<p style="color: var(--text-muted); font-size:12px;">No hay personal registrado en el directorio.</p>';
-
-      const selectedFacility = existingData ? (existingData.facility || '') : '';
-      let facilityOpts = '<option value="">-- Seleccionar local / instalación guardada --</option>';
-      if (store.contracts && store.contracts.length > 0) {
-        facilityOpts += '<optgroup label="Contratos Activos">';
-        store.contracts.forEach(c => {
-          facilityOpts += `<option value="${c.client}" ${c.client === selectedFacility ? 'selected' : ''}>${c.client}</option>`;
-        });
-        facilityOpts += '</optgroup>';
-      }
-
-      facilityOpts += '<optgroup label="Locales y Clientes Registrados">';
-      store.customFacilities.forEach(f => {
-        facilityOpts += `<option value="${f}" ${f === selectedFacility ? 'selected' : ''}>${f}</option>`;
-      });
-      facilityOpts += '</optgroup>';
-
-      const selectedType = existingData ? existingData.type : '';
-      const taskTypeOptions = store.customTaskTypes.map(t => `<option value="${t}" ${t === selectedType ? 'selected' : ''}>${t}</option>`).join('');
-
-      const defaultDate = existingData ? existingData.date : new Date().toISOString().split('T')[0];
-
-      container.innerHTML = `
-        <div class="form-group">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <label style="margin:0;">Tipo de Tarea</label>
-            <button type="button" class="btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="toggleCustomTypeBox()">⚙️ Gestionar Tipos</button>
-          </div>
-          <select id="f-t-type">${taskTypeOptions}</select>
-          
-          <div id="custom-types-box" class="tag-manager" style="display:none;">
-            <label style="font-size:11px; color:var(--text-muted);">Añadir nuevo tipo de tarea:</label>
-            <div style="display:flex; gap:6px; margin-top:4px;">
-              <input id="new-task-type-input" placeholder="Ej. Limpieza Post-Construcción" style="flex:1;">
-              <button type="button" style="padding:6px 10px;" onclick="addCustomTaskType()">+ Añadir</button>
-            </div>
-            <div class="tag-list" id="tag-list-container"></div>
-          </div>
-        </div>
-
-        <div class="form-group"><label>Título o Descripción de la Tarea</label><input required id="f-t-title" placeholder="Ej. Decapado de piso, entrega de químicos o llaves" value="${existingData ? existingData.title : ''}"></div>
-
-        <div class="form-group">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <label style="margin:0;">Instalación / Local / Ubicación</label>
-            <button type="button" class="btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="toggleCustomFacilityBox()">⚙️ Gestionar Locales</button>
-          </div>
-          <select id="f-t-facility-sel" onchange="onTaskFacilitySelectChange()" style="margin-bottom:6px;">${facilityOpts}</select>
-          <input required id="f-t-facility" placeholder="Escribe o edita la ubicación (ej. Acme Logistics - Bodega 2)" value="${selectedFacility}">
-
-          <div id="custom-facilities-box" class="tag-manager" style="display:none;">
-            <label style="font-size:11px; color:var(--text-muted);">Añadir nuevo local recurrente a la lista:</label>
-            <div style="display:flex; gap:6px; margin-top:4px;">
-              <input id="new-facility-input" placeholder="Ej. Gimnasio FitLife o Plaza Norte" style="flex:1;">
-              <button type="button" style="padding:6px 10px;" onclick="addCustomFacility()">+ Añadir</button>
-            </div>
-            <div class="tag-list" id="facility-tag-list-container"></div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Personal Asignado (Puedes marcar varios)</label>
-          <div class="checkbox-box">${staffCheckboxes}</div>
-        </div>
-
-        <div class="form-group">
-          <label>Fecha de Ejecución (Selecciona en el calendario)</label>
-          <input type="date" required id="f-t-date" value="${defaultDate}" onchange="updateTaskDayPreview()">
-          <div id="task-day-preview" style="font-size: 12px; color: var(--cyan); font-weight: bold; margin-top: 4px;"></div>
-        </div>
-
-        <div class="form-group"><label>Instrucciones de Acceso / Notas (Opcional)</label><input id="f-t-notes" placeholder="Ej. Código de alarma, contactar a supervisor en sitio" value="${existingData && existingData.notes ? existingData.notes : ''}"></div>
-      `;
-      setTimeout(() => {
-        renderCustomTaskTypesUI();
-        renderCustomFacilitiesUI();
-        updateTaskDayPreview();
-      }, 50);
-    } else if (mode === 'contract') {
-      title.textContent = existingData ? 'Editar Contrato / Reasignar Personal' : 'Nuevo Contrato o Propuesta';
-      const assignedList = existingData ? (existingData.assignedCleaners || []) : [];
-
-      let staffCheckboxes = store.staff.map(s => `
-        <div class="checkbox-item">
-          <input type="checkbox" name="cleaner-check" value="${s.name}" ${assignedList.includes(s.name) ? 'checked' : ''}>
-          <span><strong>${s.name}</strong> (${s.role})</span>
-        </div>
-      `).join('');
-
-      if (!staffCheckboxes) staffCheckboxes = '<p style="color: var(--text-muted); font-size:12px;">No hay personal registrado.</p>';
-
-      container.innerHTML = `
-        <div class="form-group">
-          <label>Agreement / Contract Type</label>
-          <select id="f-type">
-            <option value="Contract (1-Yr Auto-Renew)" ${existingData && existingData.type === 'Contract (1-Yr Auto-Renew)' ? 'selected' : ''}>Contract (1-Yr Auto-Renew)</option>
-            <option value="Contract (Month-to-Month)" ${existingData && existingData.type === 'Contract (Month-to-Month)' ? 'selected' : ''}>Contract (Month-to-Month)</option>
-            <option value="Contract (6-Month Term)" ${existingData && existingData.type === 'Contract (6-Month Term)' ? 'selected' : ''}>Contract (6-Month Term)</option>
-            <option value="Proposal / Bid" ${existingData && existingData.type === 'Proposal / Bid' ? 'selected' : ''}>Proposal / Bid</option>
-            <option value="One-Time / Special Service Agreement" ${existingData && existingData.type === 'One-Time / Special Service Agreement' ? 'selected' : ''}>One-Time / Special Service Agreement</option>
-            <option value="Subcontractor Agreement" ${existingData && existingData.type === 'Subcontractor Agreement' ? 'selected' : ''}>Subcontractor Agreement</option>
-          </select>
-        </div>
-        <div class="form-group"><label>Client / Facility Name</label><input required id="f-client" value="${existingData ? existingData.client : ''}"></div>
-        <div class="form-group">
-          <label>Limpiadores Asignados al Contrato</label>
-          <div class="checkbox-box">${staffCheckboxes}</div>
-        </div>
-        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <div>
-            <label>Value Type</label>
-            <select id="f-val-type">
-              <option value="Monthly Value" ${existingData && existingData.valueType === 'Monthly Value' ? 'selected' : ''}>Monthly Value (/mo)</option>
-              <option value="Yearly Value" ${existingData && existingData.valueType === 'Yearly Value' ? 'selected' : ''}>Yearly Value (/yr)</option>
-              <option value="Special" ${existingData && existingData.valueType === 'Special' ? 'selected' : ''}>Special (Flat Amount)</option>
-            </select>
-          </div>
-          <div>
-            <label>Amount ($ CAD)</label>
-            <input type="number" step="0.01" required id="f-val" placeholder="1450.00" value="${existingData ? existingData.value : ''}">
-          </div>
-        </div>
-        <div class="form-group"><label>Start Date</label><input type="date" required id="f-start" value="${existingData ? existingData.start : new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Expiry / Decision Date</label><input type="date" required id="f-end" value="${existingData ? existingData.expiry : ''}"></div>
-      `;
-    } else if (mode === 'staff') {
-      title.textContent = 'Registrar Empleado o Supervisor';
-      container.innerHTML = `
-        <div class="form-group"><label>Nombre Completo</label><input required id="f-st-name"></div>
-        <div class="form-group">
-          <label>Cargo / Rol</label>
-          <select id="f-st-role" onchange="onStaffRoleChange()">
-            <option value="Limpiador Comercial">Limpiador Comercial</option>
-            <option value="Supervisor de Zona / Dueño">Supervisor de Zona / Dueño (Sin tarifa fija)</option>
-            <option value="Subcontratista">Subcontratista Independiente</option>
-          </select>
-        </div>
-        <div class="form-group" id="st-rate-block">
-          <label>Tarifa Base por Hora ($ CAD) <small style="color:var(--text-muted);">(No aplica para Supervisor / Dueño)</small></label>
-          <input type="number" step="0.50" required id="f-st-rate" placeholder="20.00">
-        </div>
-        <div class="form-group"><label>Teléfono de Contacto</label><input id="f-st-phone" placeholder="(905) 555-0123"></div>
-      `;
-    } else if (mode === 'shift') {
-      title.textContent = 'Registrar Turno o Adjudicación de Pago';
-      let staffOpts = store.staff.map(s => {
-        const isOwner = s.role.includes('Supervisor');
-        const badge = isOwner ? 'Adjudicación / Dueño' : `$${s.rate}/hr base`;
-        return `<option value="${s.name}" data-rate="${s.rate || 0}" data-owner="${isOwner ? 'true' : 'false'}">${s.name} (${badge})</option>`;
-      }).join('');
-
-      if (!staffOpts) staffOpts = '<option value="">No hay personal registrado</option>';
-
-      let facilityOpts = '<option value="">-- Seleccionar Local / Instalación --</option>';
-      if (store.contracts && store.contracts.length > 0) {
-        facilityOpts += '<optgroup label="Contratos Activos">';
-        store.contracts.forEach(c => {
-          const cleanersAttr = (c.assignedCleaners && c.assignedCleaners.length > 0) ? c.assignedCleaners.join(',') : '';
-          facilityOpts += `<option value="${c.client}" data-cleaners="${cleanersAttr}">${c.client}</option>`;
-        });
-        facilityOpts += '</optgroup>';
-      }
-
-      facilityOpts += '<optgroup label="Locales Registrados">';
-      store.customFacilities.forEach(f => {
-        facilityOpts += `<option value="${f}">${f}</option>`;
-      });
-      facilityOpts += '</optgroup>';
-
-      container.innerHTML = `
-        <div class="form-group">
-          <label>Instalación / Contrato / Proyecto</label>
-          <select id="f-sh-facility-sel" onchange="onShiftFacilityChange()">${facilityOpts}</select>
-        </div>
-        <div class="form-group"><label>O Escribe el Nombre de la Instalación</label><input id="f-sh-facility" placeholder="Acme Logistics"></div>
-        <div class="form-group"><label>Seleccionar Persona</label><select id="f-sh-staff" onchange="autoFillRate()">${staffOpts}</select></div>
-        <div class="form-group"><label>Fecha del Turno / Trabajo</label><input type="date" required id="f-sh-date" value="${new Date().toISOString().split('T')[0]}"></div>
-        
-        <div class="form-group">
-          <label>Modalidad de Pago para este Registro</label>
-          <select id="f-sh-pay-model" onchange="togglePayModelFields()">
-            <option value="hourly">Pago por Horas (Horas × Tarifa)</option>
-            <option value="flat">Monto Fijo / Adjudicación Directa (Suma pactada)</option>
-          </select>
-        </div>
-
-        <div id="sh-hourly-block" class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <div>
-            <label>Horas Trabajadas</label>
-            <input type="number" step="0.25" id="f-sh-hours" placeholder="3.5" value="3.0">
-          </div>
-          <div>
-            <label>Tarifa por Hora ($ CAD)</label>
-            <input type="number" step="0.50" id="f-sh-rate" placeholder="20.00">
-          </div>
-        </div>
-
-        <div id="sh-flat-block" class="form-group" style="display: none;">
-          <label>Monto Adjudicado / Retiro ($ CAD)</label>
-          <input type="number" step="1.00" id="f-sh-flat-pay" placeholder="Ej. 250.00">
-        </div>
-
-        <div class="form-group"><label>Tipo de Tarea / Servicio</label><select id="f-sh-type"><option value="Turno Regular">Turno Contrato Regular</option><option value="Supervisión / Inspección">Supervisión / Inspección Técnica</option><option value="Limpieza Profunda / Especial">Limpieza Profunda / Especial</option><option value="Fin de Obra / Post-Construcción">Fin de Obra / Post-Construcción</option></select></div>
-      `;
-      setTimeout(autoFillRate, 50);
-    } else if (mode === 'invoice') {
-      title.textContent = 'Crear Factura / New Invoice';
-      container.innerHTML = `
-        <div class="form-group"><label>Invoice Number</label><input required id="f-num" placeholder="ACS-2026-001"></div>
-        <div class="form-group"><label>Client Name (Facturar a)</label><input required id="f-client"></div>
-        <div class="form-group"><label>Subtotal (Amount before HST - CAD)</label><input type="number" step="0.01" required id="f-sub" placeholder="1250.00"></div>
-        <div class="form-group"><label>Payment Terms</label><select id="f-terms"><option value="Net 30">Net 30 (30 days)</option><option value="Net 15">Net 15 (15 days)</option><option value="Due on Receipt">Due on Receipt</option></select></div>
-        <div class="form-group"><label>Due Date (Fecha límite)</label><input type="date" required id="f-due"></div>
-      `;
-    } else if (mode === 'cost') {
-      title.textContent = 'Registrar Gasto en Insumos o Equipos';
-      container.innerHTML = `
-        <div class="form-group"><label>Descripción del Gasto</label><input required id="f-desc" placeholder="Repuestos de mopa, desengrasante, bolsas"></div>
-        <div class="form-group"><label>Monto Pagado ($ CAD)</label><input type="number" step="0.01" required id="f-amount"></div>
-        <div class="form-group"><label>Fecha de Compra</label><input type="date" required id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
-      `;
-    }
-    document.getElementById('entry-modal').style.display = 'flex';
-  }
-
-  function onShiftFacilityChange() {
-    const facSel = document.getElementById('f-sh-facility-sel');
-    const input = document.getElementById('f-sh-facility');
-    if (!facSel.value) return;
-
-    input.value = facSel.value;
-    const cleanersRaw = facSel.selectedOptions[0].getAttribute('data-cleaners');
-    if (cleanersRaw) {
-      const primaryCleaner = cleanersRaw.split(',')[0].trim();
-      const staffSel = document.getElementById('f-sh-staff');
-      for (let i = 0; i < staffSel.options.length; i++) {
-        if (staffSel.options[i].value === primaryCleaner) {
-          staffSel.selectedIndex = i;
-          autoFillRate();
-          break;
-        }
-      }
-    }
-  }
-
-  function autoFillRate() {
-    const sel = document.getElementById('f-sh-staff');
-    if (!sel || !sel.selectedOptions[0]) return;
-    const isOwner = sel.selectedOptions[0].getAttribute('data-owner') === 'true';
-    const rate = sel.selectedOptions[0].getAttribute('data-rate');
-    const payModelSel = document.getElementById('f-sh-pay-model');
-
-    if (isOwner) {
-      payModelSel.value = 'flat';
-      togglePayModelFields();
-    } else {
-      payModelSel.value = 'hourly';
-      togglePayModelFields();
-      if (rate) {
-        const rateInput = document.getElementById('f-sh-rate');
-        if (rateInput) rateInput.value = rate;
-      }
-    }
-  }
-
-  function handleModalSubmit(mode) {
-    if (mode === 'task') {
-      const checkedStaff = Array.from(document.querySelectorAll('input[name="task-staff-check"]:checked')).map(cb => cb.value);
-
-      const taskPayload = {
-        type: document.getElementById('f-t-type').value,
-        title: document.getElementById('f-t-title').value,
-        facility: document.getElementById('f-t-facility').value,
-        assignedStaff: checkedStaff,
-        date: document.getElementById('f-t-date').value,
-        notes: document.getElementById('f-t-notes').value
-      };
-
-      if (editingTaskId) {
-        const idx = store.tasks.findIndex(t => t.id === editingTaskId);
-        if (idx !== -1) {
-          store.tasks[idx] = { ...store.tasks[idx], ...taskPayload };
-        }
-        editingTaskId = null;
-      } else {
-        taskPayload.id = Date.now().toString();
-        taskPayload.status = 'Pendiente';
-        store.tasks.push(taskPayload);
-      }
-    } else if (mode === 'contract') {
-      const checkedCleaners = Array.from(document.querySelectorAll('input[name="cleaner-check"]:checked')).map(cb => cb.value);
-
-      const contractPayload = {
-        type: document.getElementById('f-type').value,
-        client: document.getElementById('f-client').value,
-        assignedCleaners: checkedCleaners,
-        valueType: document.getElementById('f-val-type').value,
-        value: Number(document.getElementById('f-val').value),
-        start: document.getElementById('f-start').value,
-        expiry: document.getElementById('f-end').value
-      };
-
-      if (editingContractId) {
-        const idx = store.contracts.findIndex(c => c.id === editingContractId);
-        if (idx !== -1) {
-          store.contracts[idx] = { ...store.contracts[idx], ...contractPayload };
-        }
-        editingContractId = null;
-      } else {
-        contractPayload.id = Date.now().toString();
-        store.contracts.push(contractPayload);
-      }
-    } else if (mode === 'staff') {
-      const role = document.getElementById('f-st-role').value;
-      const rateVal = role.includes('Supervisor') ? 0 : Number(document.getElementById('f-st-rate').value || 0);
-
-      store.staff.push({
-        id: Date.now().toString(),
-        name: document.getElementById('f-st-name').value,
-        role: role,
-        rate: rateVal,
-        phone: document.getElementById('f-st-phone').value
-      });
-    } else if (mode === 'shift') {
-      const staffSel = document.getElementById('f-sh-staff');
-      const staffName = staffSel.value || "Limpiador";
-      const facName = document.getElementById('f-sh-facility').value || document.getElementById('f-sh-facility-sel').value;
-      const payModel = document.getElementById('f-sh-pay-model').value;
-
-      store.shifts.push({
-        id: Date.now().toString(),
-        staffName,
-        facility: facName,
-        date: document.getElementById('f-sh-date').value,
-        payModel: payModel,
-        hours: payModel === 'hourly' ? Number(document.getElementById('f-sh-hours').value) : 0,
-        rate: payModel === 'hourly' ? Number(document.getElementById('f-sh-rate').value) : 0,
-        flatPay: payModel === 'flat' ? Number(document.getElementById('f-sh-flat-pay').value) : 0,
-        type: document.getElementById('f-sh-type').value,
-        status: 'Pendiente'
-      });
-    } else if (mode === 'invoice') {
-      store.invoices.push({
-        id: Date.now().toString(),
-        num: document.getElementById('f-num').value,
-        client: document.getElementById('f-client').value,
-        subtotal: Number(document.getElementById('f-sub').value),
-        terms: document.getElementById('f-terms').value,
-        due: document.getElementById('f-due').value,
-        status: 'Unpaid'
-      });
-    } else if (mode === 'cost') {
-      store.costs.push({
-        id: Date.now().toString(),
-        desc: document.getElementById('f-desc').value,
-        amount: Number(document.getElementById('f-amount').value),
-        date: document.getElementById('f-date').value
-      });
-    }
-    closeModal();
-    saveStore();
-  }
-
-  function closeModal() { 
-    editingContractId = null;
-    editingTaskId = null;
-    document.getElementById('entry-modal').style.display = 'none'; 
-  }
-  
-  function closePrintModal() { document.getElementById('print-modal').style.display = 'none'; }
-
-  function printInvoice(invId) {
-    const inv = store.invoices.find(i => i.id === invId);
-    if (!inv) return;
-    const hst = inv.subtotal * 0.13;
-    const total = inv.subtotal + hst;
-
-    const html = `
-      <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px;">
-        <div>
-          <h2 style="margin: 0; color: #1e3a8a; font-size: 24px; letter-spacing: 1px;">INVOICE</h2>
-          <p style="margin: 6px 0 0 0; font-size: 13px; line-height: 1.4;">
-            <strong>Anora Clean Solutions</strong><br>
-            St. Catharines, ON, Canada<br>
-            Email: billing@anoraclean.ca
-          </p>
-        </div>
-        <div style="text-align: right;">
-          <p style="margin: 0; font-size: 15px;"><strong>Invoice #:</strong> ${inv.num}</p>
-          <p style="margin: 2px 0; font-size: 13px;"><strong>Issue Date:</strong> ${new Date().toLocaleDateString('en-CA')}</p>
-          <p style="margin: 2px 0; font-size: 13px;"><strong>Due Date:</strong> ${inv.due}</p>
-          <p style="margin: 2px 0; font-size: 13px;"><strong>Payment Terms:</strong> ${inv.terms}</p>
-          <p style="margin: 4px 0 0 0; font-size: 13px;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold;">STATUS: ${inv.status.toUpperCase()}</span></p>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">Billed To:</p>
-        <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0f172a;">${inv.client}</p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-        <thead>
-          <tr style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-            <th style="padding: 10px; text-align: left; font-size: 12px; text-transform: uppercase;">Service Description</th>
-            <th style="padding: 10px; text-align: right; font-size: 12px; text-transform: uppercase;">Rate (CAD)</th>
-            <th style="padding: 10px; text-align: right; font-size: 12px; text-transform: uppercase;">Amount (CAD)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding: 14px 10px; border-bottom: 1px solid #e2e8f0;">
-              <strong>Commercial Janitorial & Scheduled Sanitation Services</strong><br>
-              <span style="color: #64748b; font-size: 12px;">Professional facility cleaning and sanitation services for the agreed period.</span>
-            </td>
-            <td style="padding: 14px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">$${inv.subtotal.toFixed(2)}</td>
-            <td style="padding: 14px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">$${inv.subtotal.toFixed(2)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
-        <div style="width: 280px;">
-          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
-            <span>Subtotal:</span>
-            <span>$${inv.subtotal.toFixed(2)}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
-            <span>Ontario HST (13%):</span>
-            <span>$${hst.toFixed(2)}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px; margin-top: 4px;">
-            <span>Total Due:</span>
-            <span>$${total.toFixed(2)} CAD</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 6px; font-size: 12px; line-height: 1.5;">
-        <p style="margin: 0 0 4px 0; font-weight: bold; color: #0f172a;">Payment Instructions:</p>
-        <p style="margin: 0;">• <strong>Interac e-Transfer:</strong> billing@anoraclean.ca</p>
-        <p style="margin: 0;">• <strong>Direct Deposit / EFT:</strong> Account details available upon request.</p>
-        <p style="margin: 4px 0 0 0; color: #64748b;">Thank you for your business!</p>
-      </div>
+    document.getElementById('resumen-totales').innerHTML = `
+      <span>Total Esperado: $${totExp.toFixed(2)}</span>
+      <span>Total Pagado: $${totPaid.toFixed(2)}</span>
+      <span style="color:var(--danger)">Total Pendiente: $${totRem.toFixed(2)}</span>
     `;
-
-    document.getElementById('printable-sheet').innerHTML = html;
-    document.getElementById('print-modal').style.display = 'flex';
   }
 
-  function openPrintStation() {
-    const html = `
-      <div class="no-print" style="margin-bottom: 20px;">
-        <h2 style="margin: 0 0 10px 0; color: #0f172a;">Centro de Reportes y Documentos</h2>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button onclick="renderPnLReport()" style="background: #2563eb;">📊 Estado de Resultados (P&L Interno)</button>
-          <button onclick="renderPayrollReport()" style="background: #0891b2;">👷 Resumen de Nómina y Pagos Directos</button>
-        </div>
-      </div>
-      <div id="station-content">
-        <p style="color: #64748b;">Selecciona una opción superior para generar la vista previa e imprimir o guardar en PDF.</p>
-      </div>
-    `;
-
-    document.getElementById('printable-sheet').innerHTML = html;
-    document.getElementById('print-modal').style.display = 'flex';
+  // Registrar Service Worker para que funcione como App nativa
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('PWA lista'))
+      .catch((err) => console.log('Error SW:', err));
   }
 
-  function renderPnLReport() {
-    const baseRev = store.invoices.reduce((acc, inv) => acc + inv.subtotal, 0);
-    const hstRev = baseRev * 0.13;
-    const totalRev = baseRev + hstRev;
-    const shiftCosts = store.shifts.reduce((acc, s) => acc + calcShiftTotal(s), 0);
-    const supplyCosts = store.costs.reduce((acc, c) => acc + c.amount, 0);
-    const totalCosts = shiftCosts + supplyCosts;
-    const profit = baseRev - totalCosts;
-    const margin = baseRev > 0 ? ((profit / baseRev) * 100).toFixed(1) : '0.0';
-
-    const html = `
-      <div style="border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px;">
-        <h2 style="margin: 0; color: #1e3a8a;">Anora Clean Solutions</h2>
-        <p style="margin: 4px 0 0 0;"><strong>Estado de Resultados y Rentabilidad Operativa</strong> | Fecha: ${new Date().toLocaleDateString('es-ES')}</p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-        <thead>
-          <tr style="background: #f1f5f9;"><th style="padding: 8px; text-align: left;">Concepto</th><th style="padding: 8px; text-align: right;">Monto (CAD)</th></tr>
-        </thead>
-        <tbody>
-          <tr><td style="padding: 8px;">Facturación Comercial Neta (Sin HST)</td><td style="padding: 8px; text-align: right; font-weight: bold;">$${baseRev.toFixed(2)}</td></tr>
-          <tr><td style="padding: 8px;">Ontario HST Recaudado (13%)</td><td style="padding: 8px; text-align: right;">$${hstRev.toFixed(2)}</td></tr>
-          <tr style="background: #f8fafc; font-weight: bold;"><td style="padding: 8px;">Facturación Total Bruta (Con HST)</td><td style="padding: 8px; text-align: right;">$${totalRev.toFixed(2)}</td></tr>
-          <tr><td style="padding: 8px; color: #dc2626;">Costos de Mano de Obra y Adjudicaciones</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${shiftCosts.toFixed(2)})</td></tr>
-          <tr><td style="padding: 8px; color: #dc2626;">Insumos, Químicos y Desgaste de Maquinaria</td><td style="padding: 8px; text-align: right; color: #dc2626;">($${supplyCosts.toFixed(2)})</td></tr>
-          <tr style="background: #f1f5f9; font-weight: bold;"><td style="padding: 8px;">Costo Directo Total de Operación</td><td style="padding: 8px; text-align: right;">$${totalCosts.toFixed(2)}</td></tr>
-          <tr style="border-top: 2px solid #0f172a; font-weight: bold; font-size: 16px; background: #ecfdf5;"><td style="padding: 10px;">Beneficio Operativo Bruto</td><td style="padding: 10px; text-align: right; color: #059669;">$${profit.toFixed(2)} (${margin}%)</td></tr>
-        </tbody>
-      </table>
-    `;
-    document.getElementById('station-content').innerHTML = html;
-  }
-
-  function renderPayrollReport() {
-    const shiftRows = store.shifts.map(s => {
-      const total = calcShiftTotal(s);
-      const rateLabel = s.payModel === 'flat' ? 'Monto Fijo / Adjudicación' : `$${Number(s.rate).toFixed(2)}/h`;
-      const hourLabel = s.payModel === 'flat' ? '-' : s.hours;
-
-      return `
-        <tr>
-          <td style="padding: 6px;">${s.date}</td>
-          <td style="padding: 6px;"><strong>${s.staffName}</strong></td>
-          <td style="padding: 6px;">${s.facility}</td>
-          <td style="padding: 6px; text-align: center;">${hourLabel}</td>
-          <td style="padding: 6px; text-align: right;">${rateLabel}</td>
-          <td style="padding: 6px; text-align: right; font-weight: bold;">$${total.toFixed(2)}</td>
-          <td style="padding: 6px; text-align: center;">${s.status}</td>
-        </tr>
-      `;
-    }).join('');
-
-    const totalPay = store.shifts.reduce((acc, s) => acc + calcShiftTotal(s), 0);
-
-    const html = `
-      <div style="border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 16px;">
-        <h2 style="margin: 0; color: #1e3a8a;">Anora Clean Solutions</h2>
-        <p style="margin: 4px 0 0 0;"><strong>Planilla Consolidada de Nómina y Pagos Directos</strong></p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-        <thead>
-          <tr style="background: #f1f5f9;">
-            <th style="padding: 6px; text-align: left;">Fecha</th>
-            <th style="padding: 6px; text-align: left;">Persona</th>
-            <th style="padding: 6px; text-align: left;">Ubicación / Tarea</th>
-            <th style="padding: 6px; text-align: center;">Horas</th>
-            <th style="padding: 6px; text-align: right;">Modalidad</th>
-            <th style="padding: 6px; text-align: right;">Pago Total</th>
-            <th style="padding: 6px; text-align: center;">Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${shiftRows || '<tr><td colspan="7" style="padding:10px; text-align:center;">No hay turnos registrados.</td></tr>'}
-        </tbody>
-      </table>
-
-      <div style="text-align: right; font-size: 14px; font-weight: bold; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-        <span>Monto Total Desembolsado: $${totalPay.toFixed(2)} CAD</span>
-      </div>
-    `;
-    document.getElementById('station-content').innerHTML = html;
-  }
-
-  function exportData() {
-    const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `anora_respaldo_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-  }
-
-  loadCloudData();
-  renderApp();
+  setDefaultDates();
 </script>
 </body>
 </html>
